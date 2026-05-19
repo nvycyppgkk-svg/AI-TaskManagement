@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>タスク管理アプリ - プロトタイプ</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    /* ===== ヘッダー ===== */
+    .header {
+      background: #1a1a2e;
+      color: #fff;
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-title { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+    .header-back {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      color: #a8b2d8;
+      cursor: pointer;
+      font-size: 14px;
+      border: none;
+      background: none;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .header-back:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .header-board-name { font-size: 16px; font-weight: 600; }
+    .header-label-btn {
+      margin-left: auto;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.15s;
+    }
+    .header-label-btn:hover { background: rgba(255,255,255,0.2); }
+
+    /* ===== S-01 ボード一覧 ===== */
+    #screen-boards {
+      padding: 32px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .screen-heading {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #1a1a2e;
+    }
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .board-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      cursor: pointer;
+      transition: box-shadow 0.15s, transform 0.15s;
+      border: 2px solid transparent;
+    }
+    .board-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.12); transform: translateY(-2px); }
+    .board-card-name {
+      font-size: 16px;
+      font-weight: 600;
+      cursor: text;
+      border-radius: 4px;
+      padding: 2px 4px;
+      margin: -2px -4px;
+      transition: background 0.1s;
+    }
+    .board-card-name:hover { background: #f0f2f5; }
+    .board-card-name[contenteditable="true"] {
+      outline: 2px solid #4f6ef7;
+      background: #f7f8ff;
+    }
+    .board-card-meta { font-size: 12px; color: #8892b0; }
+    .board-card-footer { display: flex; justify-content: flex-end; }
+    .btn-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #8892b0;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 16px;
+      transition: color 0.1s, background 0.1s;
+    }
+    .btn-icon:hover { color: #e53e3e; background: #fff0f0; }
+
+    .board-card.add-card {
+      border: 2px dashed #c8d0e0;
+      background: transparent;
+      box-shadow: none;
+      align-items: center;
+      justify-content: center;
+      color: #8892b0;
+      font-size: 14px;
+      gap: 8px;
+      cursor: pointer;
+      min-height: 100px;
+    }
+    .board-card.add-card:hover { border-color: #4f6ef7; color: #4f6ef7; background: #f7f8ff; transform: none; }
+    .add-icon { font-size: 28px; line-height: 1; }
+
+    /* ===== S-02 ボード詳細 ===== */
+    #screen-board-detail { display: none; padding: 24px; overflow-x: auto; }
+    .list-container {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      min-height: calc(100vh - 52px - 48px);
+    }
+    .list-col {
+      background: #ebecf0;
+      border-radius: 12px;
+      width: 272px;
+      flex-shrink: 0;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px 4px;
+      gap: 4px;
+    }
+    .list-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #1a1a2e;
+      flex: 1;
+    }
+    .list-sort-btns {
+      display: flex;
+      gap: 2px;
+    }
+    .btn-sort {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #8892b0;
+      font-size: 11px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      transition: background 0.1s, color 0.1s;
+      white-space: nowrap;
+    }
+    .btn-sort:hover { background: rgba(0,0,0,0.08); color: #1a1a2e; }
+    .btn-sort.active { background: #4f6ef7; color: #fff; }
+    .btn-sort.active:hover { background: #3a58e0; }
+    .card-item {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .card-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.14); }
+    .card-item.dragging { opacity: 0.4; }
+    .card-item.drag-over { border-top: 2px solid #4f6ef7; }
+    .card-title { font-size: 14px; font-weight: 500; }
+    .card-meta { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+    .badge-priority {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .priority-high { background: #ffe0e0; color: #c53030; }
+    .priority-mid  { background: #fff3cd; color: #7d5a00; }
+    .priority-low  { background: #e0f0ff; color: #1a6da8; }
+    .badge-due { font-size: 11px; color: #8892b0; }
+    .badge-label {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .btn-add-card {
+      background: none;
+      border: none;
+      color: #5e6c84;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 13px;
+      text-align: left;
+      width: 100%;
+      transition: background 0.1s, color 0.1s;
+    }
+    .btn-add-card:hover { background: rgba(0,0,0,0.06); color: #1a1a2e; }
+
+    .list-col.add-list {
+      background: rgba(235,236,240,0.7);
+      border: 2px dashed #c8d0e0;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      min-height: 60px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .list-col.add-list:hover { background: #fff; border-color: #4f6ef7; color: #4f6ef7; }
+    .add-list-label { font-size: 13px; color: #8892b0; }
+    .list-col.add-list:hover .add-list-label { color: #4f6ef7; }
+
+    /* ===== モーダル共通 ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #1a1a2e;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: #8892b0;
+      padding: 4px 8px;
+      border-radius: 6px;
+      line-height: 1;
+      transition: background 0.1s;
+    }
+    .modal-close:hover { background: #f0f2f5; color: #1a1a2e; }
+
+    /* ===== S-03 カード詳細モーダル ===== */
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #5e6c84;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #dde1ea;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #1a1a2e;
+      background: #fff;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      outline: none;
+      border-color: #4f6ef7;
+    }
+    .form-textarea { resize: vertical; min-height: 80px; }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+
+    .label-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .label-chip {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px 3px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .label-chip-remove {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.8);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+    }
+    .label-chip-remove:hover { color: #fff; }
+    .btn-add-label {
+      font-size: 12px;
+      color: #4f6ef7;
+      background: #f0f2ff;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.1s;
+    }
+    .btn-add-label:hover { background: #dde3ff; }
+
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 24px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+    .btn-primary {
+      background: #4f6ef7;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: #3a58e0; }
+    .btn-danger {
+      background: none;
+      color: #e53e3e;
+      border: 2px solid #e53e3e;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-danger:hover { background: #fff0f0; }
+
+    /* ===== S-04 ラベル管理モーダル ===== */
+    .label-list-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .label-color-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .label-list-name { flex: 1; font-size: 14px; font-weight: 500; }
+    .label-form {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #eee;
+      flex-wrap: wrap;
+    }
+    .label-form .form-group { flex: 1; min-width: 120px; margin-bottom: 0; }
+    .color-picker-wrap { display: flex; align-items: center; gap: 8px; }
+    input[type="color"] {
+      width: 40px;
+      height: 38px;
+      border: 2px solid #dde1ea;
+      border-radius: 8px;
+      padding: 2px;
+      cursor: pointer;
+      background: #fff;
+    }
+
+    /* ===== 新規ボード入力フォーム ===== */
+    .new-board-form {
+      display: none;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 16px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      position: absolute;
+      z-index: 50;
+      width: 260px;
+    }
+    .new-board-form.open { display: flex; flex-direction: column; }
+    .new-board-form input {
+      padding: 8px 12px;
+      border: 2px solid #dde1ea;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .new-board-form input:focus { outline: none; border-color: #4f6ef7; }
+    .new-board-form-btns { display: flex; gap: 8px; }
+    .btn-confirm {
+      background: #4f6ef7;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-cancel {
+      background: none;
+      border: none;
+      padding: 8px;
+      cursor: pointer;
+      color: #8892b0;
+      font-size: 18px;
+    }
+
+    /* ===== 新規カード入力フォーム ===== */
+    .add-card-form {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .add-card-form.open { display: flex; }
+    .add-card-form input {
+      padding: 8px 10px;
+      border: 2px solid #4f6ef7;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    .add-card-form input:focus { outline: none; }
+    .add-card-form-btns { display: flex; gap: 6px; }
+
+    /* ===== レスポンシブ ===== */
+    @media (max-width: 600px) {
+      #screen-boards { padding: 16px; }
+      .board-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+      #screen-board-detail { padding: 12px; }
+      .list-col { width: 240px; }
+      .modal { padding: 20px 16px; }
+      .form-row { flex-direction: column; }
+    }
+
+    /* ===== 確認ダイアログ ===== */
+    .confirm-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+    }
+    .confirm-overlay.open { display: flex; }
+    .confirm-box {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px;
+      max-width: 360px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .confirm-box p { font-size: 15px; margin-bottom: 20px; color: #1a1a2e; }
+    .confirm-btns { display: flex; justify-content: flex-end; gap: 10px; }
+
+    /* エラーメッセージ */
+    .error-msg { color: #e53e3e; font-size: 12px; margin-top: 4px; display: none; }
+    .error-msg.show { display: block; }
+
+    /* トースト */
+    .toast {
+      position: fixed;
+      top: 64px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a2e;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      z-index: 400;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<header class="header">
+  <button class="header-back" id="btnBack" onclick="showBoardList()">&#8592; ボード一覧</button>
+  <span class="header-title" id="headerTitle">タスク管理アプリ</span>
+  <span class="header-board-name" id="headerBoardName"></span>
+  <button class="header-label-btn" id="btnOpenLabels" onclick="openLabelModal()">
+    &#127991; ラベル管理
+  </button>
+</header>
+
+<!-- トースト -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== S-01 ボード一覧 ===== -->
+<div id="screen-boards">
+  <h2 class="screen-heading">ボード一覧</h2>
+  <div class="board-grid" id="boardGrid">
+    <!-- ボードカードはJSで生成 -->
+    <div class="board-card add-card" id="addBoardCard" onclick="toggleNewBoardForm()">
+      <span class="add-icon">+</span>
+      <span>新しいボードを作成</span>
+      <div class="new-board-form" id="newBoardForm" onclick="event.stopPropagation()">
+        <input type="text" id="newBoardInput" placeholder="ボード名を入力" />
+        <div class="new-board-form-btns">
+          <button class="btn-confirm" onclick="createBoard()">作成</button>
+          <button class="btn-cancel" onclick="closeNewBoardForm()">&#10005;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S-02 ボード詳細 ===== -->
+<div id="screen-board-detail">
+  <div class="list-container" id="listContainer">
+    <!-- リストはJSで生成 -->
+  </div>
+</div>
+
+<!-- ===== S-03 カード詳細モーダル ===== -->
+<div class="modal-overlay" id="cardModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCardModal()">&#10005;</button>
+    <h2 class="modal-title">カード詳細</h2>
+
+    <div class="form-group">
+      <label class="form-label">タイトル <span style="color:#e53e3e">*</span></label>
+      <input class="form-input" id="cardTitle" type="text" placeholder="タイトルを入力">
+      <div class="error-msg" id="cardTitleError">タイトルは必須です</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">説明</label>
+      <textarea class="form-textarea" id="cardDesc" placeholder="説明を入力（任意）"></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">期限</label>
+        <input class="form-input" id="cardDue" type="date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">優先度</label>
+        <select class="form-select" id="cardPriority">
+          <option value="">未設定</option>
+          <option value="high">高</option>
+          <option value="mid">中</option>
+          <option value="low">低</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">ラベル</label>
+      <div class="label-chips" id="cardLabelChips"></div>
+      <button class="btn-add-label" onclick="openLabelPickerInCard()">+ ラベルを追加</button>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-danger" onclick="confirmDeleteCard()">削除</button>
+      <button class="btn-primary" onclick="saveCard()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== S-04 ラベル管理モーダル ===== -->
+<div class="modal-overlay" id="labelModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeLabelModal()">&#10005;</button>
+    <h2 class="modal-title">ラベル管理</h2>
+
+    <div id="labelList"></div>
+
+    <div class="label-form">
+      <div class="form-group">
+        <label class="form-label">ラベル名</label>
+        <input class="form-input" id="newLabelName" type="text" placeholder="ラベル名">
+        <div class="error-msg" id="labelNameError">ラベル名は必須です</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">色</label>
+        <div class="color-picker-wrap">
+          <input type="color" id="newLabelColor" value="#4f6ef7">
+        </div>
+      </div>
+      <button class="btn-primary" style="align-self:flex-end" onclick="createLabel()">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ラベル選択ポップアップ（カード詳細内） -->
+<div class="modal-overlay" id="labelPickerModal">
+  <div class="modal" style="max-width:320px">
+    <button class="modal-close" onclick="closeLabelPicker()">&#10005;</button>
+    <h2 class="modal-title" style="font-size:15px">ラベルを選択</h2>
+    <div id="labelPickerList"></div>
+  </div>
+</div>
+
+<!-- 確認ダイアログ -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <p id="confirmMsg">削除しますか？</p>
+    <div class="confirm-btns">
+      <button class="btn-primary" style="background:#8892b0" onclick="closeConfirm()">キャンセル</button>
+      <button class="btn-danger" id="confirmOkBtn">削除する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== データ =====
+  let boards = [
+    { id: 1, name: '個人タスク' },
+    { id: 2, name: '学習カリキュラム' },
+  ];
+
+  let lists = [
+    { id: 1, boardId: 1, name: 'To Do' },
+    { id: 2, boardId: 1, name: '進行中' },
+    { id: 3, boardId: 1, name: '完了' },
+    { id: 4, boardId: 2, name: 'To Do' },
+    { id: 5, boardId: 2, name: '進行中' },
+    { id: 6, boardId: 2, name: '完了' },
+  ];
+
+  let cards = [
+    { id: 1, listId: 1, title: '要件定義書を作成する', desc: '', due: '2026-05-25', priority: 'high', labels: [1] },
+    { id: 2, listId: 1, title: 'プロトタイプを作る', desc: '', due: '', priority: 'mid', labels: [] },
+    { id: 3, listId: 2, title: '画面設計を確認する', desc: 'Figmaで確認予定', due: '2026-05-20', priority: 'high', labels: [2] },
+    { id: 4, listId: 3, title: 'GitHubリポジトリ作成', desc: '', due: '', priority: 'low', labels: [] },
+  ];
+
+  let labels = [
+    { id: 1, name: '設計', color: '#4f6ef7' },
+    { id: 2, name: '実装', color: '#38a169' },
+    { id: 3, name: '緊急', color: '#e53e3e' },
+  ];
+
+  let currentBoardId = null;
+  let currentCardId = null;
+  let nextId = 100;
+  let dragSrcCardId = null;
+  let confirmCallback = null;
+  // listId → 'manual' | 'priority' | 'due'
+  let listSortState = {};
+
+  // ===== ユーティリティ =====
+  function $(id) { return document.getElementById(id); }
+
+  function showToast(msg) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // ===== S-01 ボード一覧 =====
+  function renderBoards() {
+    const grid = $('boardGrid');
+    const addCard = $('addBoardCard');
+    // 既存ボードカードを削除
+    grid.querySelectorAll('.board-card:not(.add-card)').forEach(el => el.remove());
+
+    boards.forEach(b => {
+      const card = document.createElement('div');
+      card.className = 'board-card';
+      card.dataset.id = b.id;
+      const cardCount = cards.filter(c => lists.filter(l => l.boardId === b.id).map(l => l.id).includes(c.listId)).length;
+      card.innerHTML = `
+        <div class="board-card-name" title="クリックで編集">${b.name}</div>
+        <div class="board-card-meta">${cardCount} 件のカード</div>
+        <div class="board-card-footer">
+          <button class="btn-icon" title="削除" onclick="confirmDeleteBoard(event, ${b.id})">&#128465;</button>
+        </div>
+      `;
+      card.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-icon')) return;
+        if (e.target.classList.contains('board-card-name')) {
+          startInlineEdit(e.target, b);
+          return;
+        }
+        openBoard(b.id);
+      });
+      grid.insertBefore(card, addCard);
+    });
+  }
+
+  function startInlineEdit(el, board) {
+    el.contentEditable = 'true';
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+
+    const finish = () => {
+      const val = el.textContent.trim();
+      if (!val) {
+        el.textContent = board.name;
+        showToast('ボード名は必須です');
+      } else {
+        board.name = val;
+        if (currentBoardId === board.id) $('headerBoardName').textContent = val;
+      }
+      el.contentEditable = 'false';
+      el.removeEventListener('blur', finish);
+      el.removeEventListener('keydown', onKey);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); finish(); }
+      if (e.key === 'Escape') { el.textContent = board.name; el.contentEditable = 'false'; }
+    };
+    el.addEventListener('blur', finish);
+    el.addEventListener('keydown', onKey);
+  }
+
+  function toggleNewBoardForm() {
+    const form = $('newBoardForm');
+    const isOpen = form.classList.contains('open');
+    if (isOpen) { closeNewBoardForm(); return; }
+    form.classList.add('open');
+    $('newBoardInput').focus();
+  }
+
+  function closeNewBoardForm() {
+    $('newBoardForm').classList.remove('open');
+    $('newBoardInput').value = '';
+  }
+
+  function createBoard() {
+    const name = $('newBoardInput').value.trim();
+    if (!name) { showToast('ボード名を入力してください'); $('newBoardInput').focus(); return; }
+    const id = ++nextId;
+    boards.push({ id, name });
+    lists.push(
+      { id: ++nextId, boardId: id, name: 'To Do' },
+      { id: ++nextId, boardId: id, name: '進行中' },
+      { id: ++nextId, boardId: id, name: '完了' },
+    );
+    closeNewBoardForm();
+    renderBoards();
+    openBoard(id);
+  }
+
+  $('newBoardInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') createBoard();
+    if (e.key === 'Escape') closeNewBoardForm();
+  });
+
+  function confirmDeleteBoard(e, id) {
+    e.stopPropagation();
+    openConfirm('このボードを削除しますか？', () => {
+      boards = boards.filter(b => b.id !== id);
+      const listIds = lists.filter(l => l.boardId === id).map(l => l.id);
+      lists = lists.filter(l => l.boardId !== id);
+      cards = cards.filter(c => !listIds.includes(c.listId));
+      renderBoards();
+      showToast('ボードを削除しました');
+    });
+  }
+
+  // ===== S-02 ボード詳細 =====
+  function openBoard(boardId) {
+    currentBoardId = boardId;
+    const board = boards.find(b => b.id === boardId);
+    $('screen-boards').style.display = 'none';
+    $('screen-board-detail').style.display = 'block';
+    $('headerTitle').style.display = 'none';
+    $('headerBoardName').textContent = board.name;
+    $('btnBack').style.display = 'flex';
+    $('btnOpenLabels').style.display = 'flex';
+    renderBoardDetail();
+  }
+
+  function showBoardList() {
+    $('screen-boards').style.display = 'block';
+    $('screen-board-detail').style.display = 'none';
+    $('headerTitle').style.display = '';
+    $('headerBoardName').textContent = '';
+    $('btnBack').style.display = 'none';
+    $('btnOpenLabels').style.display = 'none';
+    renderBoards();
+  }
+
+  function renderBoardDetail() {
+    const container = $('listContainer');
+    container.innerHTML = '';
+    const boardLists = lists.filter(l => l.boardId === currentBoardId);
+
+    boardLists.forEach(list => {
+      const col = document.createElement('div');
+      col.className = 'list-col';
+      col.dataset.listId = list.id;
+
+      const listCards = cards.filter(c => c.listId === list.id);
+
+      const sort = listSortState[list.id] || 'manual';
+      col.innerHTML = `
+        <div class="list-header">
+          <span class="list-name">${list.name}</span>
+          <div class="list-sort-btns">
+            <button class="btn-sort ${sort === 'priority' ? 'active' : ''}" title="優先度順" onclick="toggleSort(${list.id}, 'priority')">優先度</button>
+            <button class="btn-sort ${sort === 'due' ? 'active' : ''}" title="期限順" onclick="toggleSort(${list.id}, 'due')">期限</button>
+          </div>
+          <button class="btn-icon" title="リストを削除" onclick="confirmDeleteList(${list.id})">&#10005;</button>
+        </div>
+        <div class="card-area" id="cardArea-${list.id}"></div>
+        <div class="add-card-form" id="addCardForm-${list.id}">
+          <input type="text" placeholder="カードのタイトル" id="addCardInput-${list.id}">
+          <div class="add-card-form-btns">
+            <button class="btn-confirm" onclick="createCard(${list.id})">追加</button>
+            <button class="btn-cancel" onclick="closeAddCardForm(${list.id})">&#10005;</button>
+          </div>
+        </div>
+        <button class="btn-add-card" onclick="openAddCardForm(${list.id})">+ カードを追加</button>
+      `;
+      container.appendChild(col);
+
+      const area = col.querySelector(`#cardArea-${list.id}`);
+      const sortedCards = getSortedCards(listCards, sort);
+      sortedCards.forEach(card => area.appendChild(buildCardEl(card)));
+
+      // ドロップゾーン
+      area.addEventListener('dragover', e => { e.preventDefault(); });
+      area.addEventListener('drop', e => { e.preventDefault(); dropCard(list.id, null); });
+
+      // キーボードイベント
+      const input = col.querySelector(`#addCardInput-${list.id}`);
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') createCard(list.id);
+        if (e.key === 'Escape') closeAddCardForm(list.id);
+      });
+    });
+
+    // リスト追加ボタン
+    const addListCol = document.createElement('div');
+    addListCol.className = 'list-col add-list';
+    addListCol.innerHTML = '<span class="add-list-label">+ リストを追加</span>';
+    addListCol.onclick = () => addList();
+    container.appendChild(addListCol);
+  }
+
+  const PRIORITY_ORDER = { high: 0, mid: 1, low: 2, '': 3 };
+
+  function getSortedCards(cardList, sort) {
+    if (sort === 'priority') {
+      return [...cardList].sort((a, b) =>
+        (PRIORITY_ORDER[a.priority] ?? 3) - (PRIORITY_ORDER[b.priority] ?? 3)
+      );
+    }
+    if (sort === 'due') {
+      return [...cardList].sort((a, b) => {
+        if (!a.due && !b.due) return 0;
+        if (!a.due) return 1;
+        if (!b.due) return -1;
+        return a.due.localeCompare(b.due);
+      });
+    }
+    return cardList;
+  }
+
+  function toggleSort(listId, mode) {
+    const current = listSortState[listId] || 'manual';
+    listSortState[listId] = current === mode ? 'manual' : mode;
+    renderBoardDetail();
+  }
+
+  function buildCardEl(card) {
+    const el = document.createElement('div');
+    el.className = 'card-item';
+    el.dataset.cardId = card.id;
+    const isSorted = (listSortState[card.listId] || 'manual') !== 'manual';
+    el.draggable = !isSorted;
+
+    const priorityLabel = { high: '高', mid: '中', low: '低' }[card.priority] || '';
+    const priorityClass = { high: 'priority-high', mid: 'priority-mid', low: 'priority-low' }[card.priority] || '';
+
+    const labelHtml = card.labels.map(lid => {
+      const l = labels.find(x => x.id === lid);
+      if (!l) return '';
+      return `<span class="badge-label" style="background:${l.color}">${l.name}</span>`;
+    }).join('');
+
+    el.innerHTML = `
+      <div class="card-title">${card.title}</div>
+      <div class="card-meta">
+        ${card.priority ? `<span class="badge-priority ${priorityClass}">${priorityLabel}</span>` : ''}
+        ${card.due ? `<span class="badge-due">&#128197; ${card.due}</span>` : ''}
+        ${labelHtml}
+      </div>
+    `;
+
+    el.addEventListener('click', () => openCardModal(card.id));
+    el.addEventListener('dragstart', () => { dragSrcCardId = card.id; el.classList.add('dragging'); });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      dropCard(card.listId, card.id);
+    });
+    return el;
+  }
+
+  function dropCard(targetListId, beforeCardId) {
+    if (dragSrcCardId == null) return;
+    const card = cards.find(c => c.id === dragSrcCardId);
+    if (!card) return;
+    card.listId = targetListId;
+    // 順序入れ替え
+    if (beforeCardId && beforeCardId !== dragSrcCardId) {
+      cards = cards.filter(c => c.id !== dragSrcCardId);
+      const idx = cards.findIndex(c => c.id === beforeCardId);
+      cards.splice(idx, 0, card);
+    }
+    dragSrcCardId = null;
+    renderBoardDetail();
+  }
+
+  function openAddCardForm(listId) {
+    $(`addCardForm-${listId}`).classList.add('open');
+    $(`addCardInput-${listId}`).focus();
+  }
+  function closeAddCardForm(listId) {
+    $(`addCardForm-${listId}`).classList.remove('open');
+    $(`addCardInput-${listId}`).value = '';
+  }
+
+  function createCard(listId) {
+    const input = $(`addCardInput-${listId}`);
+    const title = input.value.trim();
+    if (!title) { showToast('タイトルを入力してください'); return; }
+    cards.push({ id: ++nextId, listId, title, desc: '', due: '', priority: '', labels: [] });
+    closeAddCardForm(listId);
+    renderBoardDetail();
+  }
+
+  function addList() {
+    const name = prompt('リスト名を入力してください');
+    if (!name || !name.trim()) { if (name !== null) showToast('リスト名を入力してください'); return; }
+    lists.push({ id: ++nextId, boardId: currentBoardId, name: name.trim() });
+    renderBoardDetail();
+  }
+
+  function confirmDeleteList(listId) {
+    openConfirm('このリストを削除しますか？（カードも削除されます）', () => {
+      lists = lists.filter(l => l.id !== listId);
+      cards = cards.filter(c => c.listId !== listId);
+      renderBoardDetail();
+      showToast('リストを削除しました');
+    });
+  }
+
+  // ===== S-03 カード詳細モーダル =====
+  function openCardModal(cardId) {
+    currentCardId = cardId;
+    const card = cards.find(c => c.id === cardId);
+    $('cardTitle').value = card.title;
+    $('cardDesc').value = card.desc;
+    $('cardDue').value = card.due;
+    $('cardPriority').value = card.priority;
+    $('cardTitleError').classList.remove('show');
+    renderCardLabels(card.labels);
+    $('cardModal').classList.add('open');
+    $('cardTitle').focus();
+  }
+
+  function closeCardModal() {
+    $('cardModal').classList.remove('open');
+    currentCardId = null;
+  }
+
+  function renderCardLabels(cardLabelIds) {
+    const chips = $('cardLabelChips');
+    chips.innerHTML = '';
+    cardLabelIds.forEach(lid => {
+      const l = labels.find(x => x.id === lid);
+      if (!l) return;
+      const chip = document.createElement('span');
+      chip.className = 'label-chip';
+      chip.style.background = l.color;
+      chip.innerHTML = `${l.name}<button class="label-chip-remove" onclick="removeCardLabel(${lid})">&#10005;</button>`;
+      chips.appendChild(chip);
+    });
+  }
+
+  function removeCardLabel(labelId) {
+    const card = cards.find(c => c.id === currentCardId);
+    if (!card) return;
+    card.labels = card.labels.filter(id => id !== labelId);
+    renderCardLabels(card.labels);
+  }
+
+  function saveCard() {
+    const title = $('cardTitle').value.trim();
+    if (!title) { $('cardTitleError').classList.add('show'); $('cardTitle').focus(); return; }
+    const card = cards.find(c => c.id === currentCardId);
+    card.title = title;
+    card.desc = $('cardDesc').value.trim();
+    card.due = $('cardDue').value;
+    card.priority = $('cardPriority').value;
+    closeCardModal();
+    renderBoardDetail();
+    showToast('カードを保存しました');
+  }
+
+  function confirmDeleteCard() {
+    openConfirm('このカードを削除しますか？', () => {
+      cards = cards.filter(c => c.id !== currentCardId);
+      closeCardModal();
+      renderBoardDetail();
+      showToast('カードを削除しました');
+    });
+  }
+
+  // ===== ラベルピッカー（カード詳細内） =====
+  function openLabelPickerInCard() {
+    const card = cards.find(c => c.id === currentCardId);
+    const list = $('labelPickerList');
+    list.innerHTML = '';
+    labels.forEach(l => {
+      const has = card.labels.includes(l.id);
+      const item = document.createElement('div');
+      item.className = 'label-list-item';
+      item.style.cursor = 'pointer';
+      item.innerHTML = `
+        <span class="label-color-dot" style="background:${l.color}"></span>
+        <span class="label-list-name">${l.name}</span>
+        <span style="color:${has ? '#4f6ef7' : '#dde1ea'};font-size:18px">${has ? '&#10003;' : '+'}</span>
+      `;
+      item.addEventListener('click', () => {
+        if (has) {
+          card.labels = card.labels.filter(id => id !== l.id);
+        } else {
+          card.labels.push(l.id);
+        }
+        renderCardLabels(card.labels);
+        closeLabelPicker();
+      });
+      list.appendChild(item);
+    });
+    $('labelPickerModal').classList.add('open');
+  }
+  function closeLabelPicker() { $('labelPickerModal').classList.remove('open'); }
+
+  // ===== S-04 ラベル管理モーダル =====
+  function openLabelModal() {
+    renderLabelList();
+    $('labelModal').classList.add('open');
+  }
+  function closeLabelModal() { $('labelModal').classList.remove('open'); }
+
+  function renderLabelList() {
+    const list = $('labelList');
+    list.innerHTML = '';
+    if (labels.length === 0) {
+      list.innerHTML = '<p style="color:#8892b0;font-size:13px;padding:8px 0">ラベルがありません</p>';
+      return;
+    }
+    labels.forEach(l => {
+      const item = document.createElement('div');
+      item.className = 'label-list-item';
+      item.innerHTML = `
+        <span class="label-color-dot" style="background:${l.color}"></span>
+        <span class="label-list-name">${l.name}</span>
+        <button class="btn-icon" onclick="deleteLabel(${l.id})">&#128465;</button>
+      `;
+      list.appendChild(item);
+    });
+  }
+
+  function createLabel() {
+    const name = $('newLabelName').value.trim();
+    const color = $('newLabelColor').value;
+    if (!name) { $('labelNameError').classList.add('show'); $('newLabelName').focus(); return; }
+    $('labelNameError').classList.remove('show');
+    labels.push({ id: ++nextId, name, color });
+    $('newLabelName').value = '';
+    renderLabelList();
+    showToast('ラベルを追加しました');
+  }
+
+  $('newLabelName').addEventListener('keydown', e => { if (e.key === 'Enter') createLabel(); });
+
+  function deleteLabel(id) {
+    labels = labels.filter(l => l.id !== id);
+    cards.forEach(c => { c.labels = c.labels.filter(lid => lid !== id); });
+    renderLabelList();
+    showToast('ラベルを削除しました');
+  }
+
+  // ===== 確認ダイアログ =====
+  function openConfirm(msg, cb) {
+    $('confirmMsg').textContent = msg;
+    confirmCallback = cb;
+    $('confirmOverlay').classList.add('open');
+  }
+  function closeConfirm() { $('confirmOverlay').classList.remove('open'); confirmCallback = null; }
+  $('confirmOkBtn').addEventListener('click', () => {
+    if (confirmCallback) confirmCallback();
+    closeConfirm();
+  });
+
+  // キーボード: Escでモーダルを閉じる
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if ($('confirmOverlay').classList.contains('open')) { closeConfirm(); return; }
+      if ($('labelPickerModal').classList.contains('open')) { closeLabelPicker(); return; }
+      if ($('cardModal').classList.contains('open')) { closeCardModal(); return; }
+      if ($('labelModal').classList.contains('open')) { closeLabelModal(); return; }
+    }
+  });
+
+  // ===== 初期表示 =====
+  renderBoards();
+</script>
+</body>
+</html>
