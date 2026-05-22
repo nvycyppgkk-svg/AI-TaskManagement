@@ -95,7 +95,7 @@ flowchart TD
 | [画面設計](screen-design.md) | 画面一覧、画面遷移図、各画面のUI仕様 |
 | [データベース設計](database.md) | ER図、エンティティ定義、リレーション |
 | [非機能要件](non-functional.md) | レスポンシブ・パフォーマンス・ブラウザ対応など |
-| [技術選定](tech-stack.md) | 使用技術・フレームワーク・ライブラリの選定 |
+| [技術選定](tech-stack.md) | React / Java(Spring Boot) / PostgreSQL を中心とした技術スタック |
 
 ---
 
