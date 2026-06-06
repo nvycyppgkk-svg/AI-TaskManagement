@@ -1,0 +1,49 @@
+name: 機能追加
+description: 新機能・機能改善の起票
+labels: ["enhancement"]
+body:
+  - type: input
+    id: summary
+    attributes:
+      label: 機能概要（1行）
+      placeholder: "例: カード詳細モーダルにコメント欄を追加する"
+    validations:
+      required: true
+
+  - type: textarea
+    id: background
+    attributes:
+      label: 背景・目的
+      description: なぜこの機能が必要か、どんな問題を解決するかを記載してください
+      placeholder: "例: カードに補足情報を残せないため、作業の意図が後から分からなくなっている"
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完了条件
+      description: この機能が完成したと判断できる具体的な条件をチェックリスト形式で記載してください
+      value: |
+        - [ ]
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+
+  - type: dropdown
+    id: layer
+    attributes:
+      label: 対象レイヤー
+      description: 変更が入るレイヤーをすべて選択してください
+      multiple: true
+      options:
+        - フロントエンド (React/TypeScript)
+        - バックエンド (Spring Boot)
+        - DB (PostgreSQL/Flyway)
+        - インフラ (Docker)
+        - ドキュメント
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 補足・参考情報
+      description: 実装上の注意点や参考リンクがあれば記載してください
