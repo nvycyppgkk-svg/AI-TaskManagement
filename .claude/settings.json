@@ -42,9 +42,7 @@
       "Bash(git push --set-upstream origin main*)",
       "Bash(chmod *)",
       "Bash(chown *)",
-      "Bash(sudo *)",
-      "Bash(kill *)",
-      "Bash(pkill *)"
+      "Bash(sudo *)"
     ]
   }
 }
