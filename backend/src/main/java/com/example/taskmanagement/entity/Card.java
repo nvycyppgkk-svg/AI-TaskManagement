@@ -46,6 +46,21 @@ public class Card {
     )
     private List<Label> labels = new ArrayList<>();
 
+    public Card() {
+    }
+
+    public Card(BoardList boardList, String title, String description, String priority,
+                LocalDate dueDate, Integer position, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.boardList = boardList;
+        this.title = title;
+        this.description = description;
+        this.priority = priority;
+        this.dueDate = dueDate;
+        this.position = position;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
     public Integer getId()              { return id; }
     public BoardList getBoardList()     { return boardList; }
     public String getTitle()            { return title; }

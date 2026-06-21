@@ -25,3 +25,11 @@ export async function fetchCardById(id: number): Promise<CardDetail> {
     priority: normalizePriority(res.data.priority as unknown as string),
   };
 }
+
+export async function createCard(listId: number, title: string): Promise<CardDetail> {
+  const res = await apiClient.post<CardDetail>(`/api/lists/${listId}/cards`, { title });
+  return {
+    ...res.data,
+    priority: normalizePriority(res.data.priority as unknown as string),
+  };
+}

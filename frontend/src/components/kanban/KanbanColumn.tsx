@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { BoardList } from '../../types';
 import { useKanbanStore, getFilteredCards } from '../../store/kanbanStore';
 import KanbanCard from './KanbanCard';
@@ -10,9 +11,23 @@ export default function KanbanColumn({ list }: Props) {
   const cardsByList = useKanbanStore(s => s.cardsByList);
   const searchQuery = useKanbanStore(s => s.searchQuery);
   const cardsLoading = useKanbanStore(s => s.cardsLoading);
+  const addCard = useKanbanStore(s => s.addCard);
+
+  const [newTitle, setNewTitle] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const allCards = cardsByList[list.id] ?? [];
   const visibleCards = getFilteredCards(allCards, searchQuery);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const title = newTitle.trim();
+    if (!title || submitting) return;
+    setSubmitting(true);
+    await addCard(list.id, title);
+    setSubmitting(false);
+    setNewTitle('');
+  };
 
   return (
     <div className="flex-shrink-0 w-64 bg-[#ebecf0] rounded-xl flex flex-col max-h-full">
@@ -30,6 +45,17 @@ export default function KanbanColumn({ list }: Props) {
           <p className="text-xs text-gray-400 text-center py-4">一致するカードなし</p>
         ) : null}
       </div>
+
+      <form onSubmit={handleSubmit} className="px-2 pb-3">
+        <input
+          type="text"
+          value={newTitle}
+          onChange={e => setNewTitle(e.target.value)}
+          placeholder="+ カードを追加"
+          disabled={submitting}
+          className="w-full bg-white rounded-lg px-3 py-2 text-sm text-gray-700 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/40 disabled:opacity-60"
+        />
+      </form>
     </div>
   );
 }
