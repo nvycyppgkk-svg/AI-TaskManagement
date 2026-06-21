@@ -15,7 +15,7 @@ Trelloライクな個人向けKanbanタスク管理ボード。ITスクールの
 
 | 層 | 技術 | バージョン |
 |---|---|---|
-| フロントエンド | React + TypeScript + Vite + Tailwind CSS + Zustand | 18.3.1 / 5.5.3 / 5.4.2 / 3.4.10 / 4.5.4 |
+| フロントエンド | React + TypeScript + Vite + Tailwind CSS + Zustand | 19.2.7 / 6.0.3 / 8.0.16 / 4.3.1 / 5.0.14 |
 | バックエンド | Java + Spring Boot + Gradle | 26 / 4.0.6 / 9.5.1 |
 | DB | PostgreSQL + Flyway | 16 |
 | インフラ | Docker / Docker Compose | - |
