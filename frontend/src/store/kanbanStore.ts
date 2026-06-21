@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { BoardDetail, CardSummary, CardsByList, CardDetail } from '../types';
 import { fetchBoardById } from '../api/boards';
-import { fetchCardsByListId, fetchCardById } from '../api/cards';
+import { fetchCardsByListId, fetchCardById, createCard } from '../api/cards';
 
 interface KanbanStore {
   board: BoardDetail | null;
@@ -15,6 +15,7 @@ interface KanbanStore {
   loadAllCards: (listIds: number[]) => Promise<void>;
   openCardDetail: (cardId: number) => Promise<void>;
   closeCardDetail: () => void;
+  addCard: (listId: number, title: string) => Promise<void>;
   setSearchQuery: (q: string) => void;
   clearError: () => void;
 }
@@ -61,6 +62,31 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   },
 
   closeCardDetail: () => set({ selectedCard: null }),
+
+  addCard: async (listId, title) => {
+    try {
+      const card = await createCard(listId, title);
+      set(state => ({
+        cardsByList: {
+          ...state.cardsByList,
+          [listId]: [
+            ...(state.cardsByList[listId] ?? []),
+            {
+              id: card.id,
+              title: card.title,
+              priority: card.priority,
+              dueDate: card.dueDate,
+              position: card.position,
+              createdAt: card.createdAt,
+            },
+          ],
+        },
+      }));
+    } catch {
+      set({ error: 'カードの作成に失敗しました' });
+    }
+  },
+
   setSearchQuery: (q) => set({ searchQuery: q }),
   clearError: () => set({ error: null }),
 }));
