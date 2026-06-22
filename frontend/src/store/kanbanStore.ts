@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { BoardDetail, CardSummary, CardsByList, CardDetail } from '../types';
 import { fetchBoardById } from '../api/boards';
-import { fetchCardsByListId, fetchCardById, createCard } from '../api/cards';
+import { fetchCardsByListId, fetchCardById, createCard, updateCard, type CardUpdatePayload } from '../api/cards';
 
 interface KanbanStore {
   board: BoardDetail | null;
@@ -16,6 +16,8 @@ interface KanbanStore {
   openCardDetail: (cardId: number) => Promise<void>;
   closeCardDetail: () => void;
   addCard: (listId: number, title: string) => Promise<void>;
+  editCard: (cardId: number, payload: CardUpdatePayload) => Promise<void>;
+  moveCard: (cardId: number, targetListId: number, targetIndex: number) => Promise<void>;
   setSearchQuery: (q: string) => void;
   clearError: () => void;
 }
@@ -84,6 +86,76 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       }));
     } catch {
       set({ error: 'カードの作成に失敗しました' });
+    }
+  },
+
+  editCard: async (cardId, payload) => {
+    const prevCard = get().selectedCard;
+    const prevListId = prevCard?.id === cardId ? prevCard.listId : undefined;
+    try {
+      const updated = await updateCard(cardId, payload);
+      set(state => {
+        const cardsByList = { ...state.cardsByList };
+        const sourceListId = prevListId ?? updated.listId;
+
+        if (sourceListId !== undefined && cardsByList[sourceListId]) {
+          cardsByList[sourceListId] = cardsByList[sourceListId].filter(c => c.id !== cardId);
+        }
+
+        const summary: CardSummary = {
+          id: updated.id,
+          title: updated.title,
+          priority: updated.priority,
+          dueDate: updated.dueDate,
+          position: updated.position,
+          createdAt: updated.createdAt,
+        };
+        cardsByList[updated.listId] = [...(cardsByList[updated.listId] ?? []), summary];
+
+        return {
+          cardsByList,
+          selectedCard: state.selectedCard?.id === cardId ? updated : state.selectedCard,
+        };
+      });
+    } catch {
+      set({ error: 'カードの更新に失敗しました' });
+    }
+  },
+
+  moveCard: async (cardId, targetListId, targetIndex) => {
+    const prevState = get().cardsByList;
+    const sourceListId = Object.keys(prevState)
+      .map(Number)
+      .find(listId => prevState[listId].some(c => c.id === cardId));
+    if (sourceListId === undefined) return;
+
+    const movingCard = prevState[sourceListId].find(c => c.id === cardId);
+    if (!movingCard) return;
+
+    if (sourceListId === targetListId) {
+      const currentIndex = prevState[sourceListId].findIndex(c => c.id === cardId);
+      if (currentIndex === targetIndex) return;
+    }
+
+    const optimistic: CardsByList = { ...prevState };
+    optimistic[sourceListId] = optimistic[sourceListId].filter(c => c.id !== cardId);
+    const targetCards = [...(optimistic[targetListId] ?? [])];
+    const insertAt = Math.max(0, Math.min(targetIndex, targetCards.length));
+    targetCards.splice(insertAt, 0, movingCard);
+    optimistic[targetListId] = targetCards;
+    set({ cardsByList: optimistic });
+
+    try {
+      await updateCard(cardId, { listId: targetListId, position: targetIndex });
+      const refreshedLists = Array.from(new Set([sourceListId, targetListId]));
+      const refreshed = await Promise.all(refreshedLists.map(id => fetchCardsByListId(id)));
+      set(state => {
+        const cardsByList = { ...state.cardsByList };
+        refreshedLists.forEach((id, i) => { cardsByList[id] = refreshed[i]; });
+        return { cardsByList };
+      });
+    } catch {
+      set({ cardsByList: prevState, error: 'カードの移動に失敗しました' });
     }
   },
 

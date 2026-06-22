@@ -1,6 +1,7 @@
 package com.example.taskmanagement.controller;
 
 import com.example.taskmanagement.dto.request.CardCreateRequest;
+import com.example.taskmanagement.dto.request.CardUpdateRequest;
 import com.example.taskmanagement.dto.response.CardDetailResponse;
 import com.example.taskmanagement.dto.response.CardSummaryResponse;
 import com.example.taskmanagement.service.CardService;
@@ -36,5 +37,12 @@ public class CardController {
             @Valid @RequestBody CardCreateRequest request) {
         CardDetailResponse created = cardService.createCard(listId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PatchMapping("/api/cards/{id}")
+    public ResponseEntity<CardDetailResponse> updateCard(
+            @PathVariable Integer id,
+            @Valid @RequestBody CardUpdateRequest request) {
+        return ResponseEntity.ok(cardService.updateCard(id, request));
     }
 }

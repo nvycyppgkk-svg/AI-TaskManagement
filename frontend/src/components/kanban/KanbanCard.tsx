@@ -1,8 +1,12 @@
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import type { CardSummary } from '../../types';
 import { useKanbanStore } from '../../store/kanbanStore';
 
 interface Props {
   card: CardSummary;
+  listId: number;
+  index: number;
 }
 
 const priorityStyles: Record<string, string> = {
@@ -17,13 +21,30 @@ const priorityLabel: Record<string, string> = {
   low:  '低',
 };
 
-export default function KanbanCard({ card }: Props) {
+export default function KanbanCard({ card, listId, index }: Props) {
   const openCardDetail = useKanbanStore(s => s.openCardDetail);
+  const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
+    id: `card-${card.id}`,
+    data: { cardId: card.id, listId },
+  });
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: `card-drop-${card.id}`,
+    data: { listId, index },
+  });
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.4 : 1,
+  };
 
   return (
     <button
+      ref={node => { setDragRef(node); setDropRef(node); }}
+      style={style}
+      {...attributes}
+      {...listeners}
       onClick={() => openCardDetail(card.id)}
-      className="w-full bg-white rounded-lg p-3 text-left shadow-sm hover:shadow-md transition cursor-pointer border border-transparent hover:border-brand-blue/30"
+      className={`w-full bg-white rounded-lg p-3 text-left shadow-sm hover:shadow-md transition cursor-grab active:cursor-grabbing border-2 ${isOver ? 'border-brand-blue' : 'border-transparent hover:border-brand-blue/30'}`}
     >
       <p className="text-sm text-gray-800 font-medium leading-snug">{card.title}</p>
       <div className="flex items-center gap-2 mt-2 flex-wrap">

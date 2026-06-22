@@ -71,4 +71,12 @@ public class Card {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public List<Label> getLabels()      { return labels; }
+
+    public void setBoardList(BoardList boardList)   { this.boardList = boardList; }
+    public void setTitle(String title)              { this.title = title; }
+    public void setDescription(String description)  { this.description = description; }
+    public void setDueDate(LocalDate dueDate)       { this.dueDate = dueDate; }
+    public void setPriority(String priority)        { this.priority = priority; }
+    public void setPosition(Integer position)       { this.position = position; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
