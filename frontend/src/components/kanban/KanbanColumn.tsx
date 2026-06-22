@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useDroppable } from '@dnd-kit/core';
 import type { BoardList } from '../../types';
 import { useKanbanStore, getFilteredCards } from '../../store/kanbanStore';
 import KanbanCard from './KanbanCard';
@@ -19,6 +20,11 @@ export default function KanbanColumn({ list }: Props) {
   const allCards = cardsByList[list.id] ?? [];
   const visibleCards = getFilteredCards(allCards, searchQuery);
 
+  const { setNodeRef: setColumnDropRef, isOver: isOverColumn } = useDroppable({
+    id: `column-drop-${list.id}`,
+    data: { listId: list.id, index: allCards.length },
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const title = newTitle.trim();
@@ -36,11 +42,16 @@ export default function KanbanColumn({ list }: Props) {
         <span className="text-xs text-gray-400 bg-white rounded-full px-2 py-0.5">{visibleCards.length}</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 pb-3 flex flex-col gap-2 min-h-[60px]">
+      <div
+        ref={setColumnDropRef}
+        className={`flex-1 overflow-y-auto px-2 pb-3 flex flex-col gap-2 min-h-[60px] rounded-lg transition ${isOverColumn ? 'bg-brand-blue/10' : ''}`}
+      >
         {cardsLoading && allCards.length === 0 ? (
           <div className="h-10 bg-white/60 rounded animate-pulse" />
         ) : visibleCards.length > 0 ? (
-          visibleCards.map(card => <KanbanCard key={card.id} card={card} />)
+          visibleCards.map((card, i) => (
+            <KanbanCard key={card.id} card={card} listId={list.id} index={i} />
+          ))
         ) : searchQuery.trim() ? (
           <p className="text-xs text-gray-400 text-center py-4">一致するカードなし</p>
         ) : null}

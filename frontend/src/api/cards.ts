@@ -10,6 +10,24 @@ function normalizePriority(raw: string | null | undefined): Priority {
   }
 }
 
+function denormalizePriority(priority: Priority): string | null {
+  switch (priority) {
+    case 'high': return 'HIGH';
+    case 'mid':  return 'MEDIUM';
+    case 'low':  return 'LOW';
+    default:     return null;
+  }
+}
+
+export interface CardUpdatePayload {
+  title?: string;
+  description?: string | null;
+  priority?: Priority;
+  dueDate?: string | null;
+  listId?: number;
+  position?: number;
+}
+
 export async function fetchCardsByListId(listId: number): Promise<CardSummary[]> {
   const res = await apiClient.get<CardSummary[]>(`/api/lists/${listId}/cards`);
   return res.data.map(card => ({
@@ -28,6 +46,18 @@ export async function fetchCardById(id: number): Promise<CardDetail> {
 
 export async function createCard(listId: number, title: string): Promise<CardDetail> {
   const res = await apiClient.post<CardDetail>(`/api/lists/${listId}/cards`, { title });
+  return {
+    ...res.data,
+    priority: normalizePriority(res.data.priority as unknown as string),
+  };
+}
+
+export async function updateCard(cardId: number, payload: CardUpdatePayload): Promise<CardDetail> {
+  const body = {
+    ...payload,
+    priority: payload.priority !== undefined ? denormalizePriority(payload.priority) : undefined,
+  };
+  const res = await apiClient.patch<CardDetail>(`/api/cards/${cardId}`, body);
   return {
     ...res.data,
     priority: normalizePriority(res.data.priority as unknown as string),
