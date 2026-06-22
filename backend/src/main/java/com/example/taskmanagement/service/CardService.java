@@ -1,6 +1,7 @@
 package com.example.taskmanagement.service;
 
 import com.example.taskmanagement.dto.request.CardCreateRequest;
+import com.example.taskmanagement.dto.request.CardUpdateRequest;
 import com.example.taskmanagement.dto.response.CardDetailResponse;
 import com.example.taskmanagement.dto.response.CardSummaryResponse;
 import com.example.taskmanagement.entity.BoardList;
@@ -11,6 +12,7 @@ import com.example.taskmanagement.repository.CardRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,5 +69,62 @@ public class CardService {
 
         Card saved = cardRepository.save(card);
         return CardDetailResponse.from(saved);
+    }
+
+    @Transactional
+    public CardDetailResponse updateCard(Integer id, CardUpdateRequest request) {
+        Card card = cardRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Card", id));
+
+        if (request.getTitle() != null) {
+            card.setTitle(request.getTitle());
+        }
+        if (request.getDescription() != null) {
+            card.setDescription(request.getDescription());
+        }
+        if (request.getPriority() != null) {
+            card.setPriority(request.getPriority());
+        }
+        if (request.getDueDate() != null) {
+            card.setDueDate(request.getDueDate());
+        }
+        boolean listChanged = request.getListId() != null && !request.getListId().equals(card.getBoardList().getId());
+        if (listChanged || request.getPosition() != null) {
+            Integer targetListId = listChanged ? request.getListId() : card.getBoardList().getId();
+            BoardList targetList = listChanged
+                ? boardListRepository.findById(targetListId)
+                    .orElseThrow(() -> new ResourceNotFoundException("List", targetListId))
+                : card.getBoardList();
+
+            reorderCard(card, targetList, request.getPosition());
+        }
+
+        card.setUpdatedAt(LocalDateTime.now());
+
+        Card saved = cardRepository.save(card);
+        return CardDetailResponse.from(saved);
+    }
+
+    private void reorderCard(Card card, BoardList targetList, Integer requestedPosition) {
+        boolean movingList = !targetList.getId().equals(card.getBoardList().getId());
+
+        List<Card> targetCards = cardRepository.findByBoardListIdOrderByPositionAsc(targetList.getId()).stream()
+            .filter(c -> !c.getId().equals(card.getId()))
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        int insertIndex = requestedPosition == null
+            ? targetCards.size()
+            : Math.max(0, Math.min(requestedPosition, targetCards.size()));
+        targetCards.add(insertIndex, card);
+
+        for (int i = 0; i < targetCards.size(); i++) {
+            targetCards.get(i).setPosition(i);
+        }
+
+        if (movingList) {
+            card.setBoardList(targetList);
+        }
+
+        cardRepository.saveAll(targetCards);
     }
 }
