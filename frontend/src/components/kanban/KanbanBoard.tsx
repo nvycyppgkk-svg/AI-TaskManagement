@@ -1,4 +1,4 @@
-import { DndContext, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import type { BoardList } from '../../types';
 import { useKanbanStore } from '../../store/kanbanStore';
 import KanbanColumn from './KanbanColumn';
@@ -10,6 +10,10 @@ interface Props {
 export default function KanbanBoard({ lists }: Props) {
   const moveCard = useKanbanStore(s => s.moveCard);
   const sorted = [...lists].sort((a, b) => a.position - b.position);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -24,7 +28,7 @@ export default function KanbanBoard({ lists }: Props) {
   };
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="flex gap-4 p-6 overflow-x-auto h-full items-start">
         {sorted.map(list => (
           <KanbanColumn key={list.id} list={list} />
