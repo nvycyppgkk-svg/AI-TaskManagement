@@ -7,6 +7,7 @@ interface Props {
   card: CardSummary;
   listId: number;
   index: number;
+  dragDisabled?: boolean;
 }
 
 const priorityStyles: Record<string, string> = {
@@ -21,11 +22,12 @@ const priorityLabel: Record<string, string> = {
   low:  '低',
 };
 
-export default function KanbanCard({ card, listId, index }: Props) {
+export default function KanbanCard({ card, listId, index, dragDisabled }: Props) {
   const openCardDetail = useKanbanStore(s => s.openCardDetail);
   const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
     id: `card-${card.id}`,
     data: { cardId: card.id, listId },
+    disabled: dragDisabled,
   });
   const { setNodeRef: setDropRef, isOver } = useDroppable({
     id: `card-drop-${card.id}`,
@@ -44,7 +46,7 @@ export default function KanbanCard({ card, listId, index }: Props) {
       {...attributes}
       {...listeners}
       onClick={() => openCardDetail(card.id)}
-      className={`w-full bg-white rounded-lg p-3 text-left shadow-sm hover:shadow-md transition cursor-grab active:cursor-grabbing border-2 ${isOver ? 'border-brand-blue' : 'border-transparent hover:border-brand-blue/30'}`}
+      className={`w-full bg-white rounded-lg p-3 text-left shadow-sm hover:shadow-md transition border-2 ${dragDisabled ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${isOver ? 'border-brand-blue' : 'border-transparent hover:border-brand-blue/30'}`}
     >
       <p className="text-sm text-gray-800 font-medium leading-snug">{card.title}</p>
       <div className="flex items-center gap-2 mt-2 flex-wrap">

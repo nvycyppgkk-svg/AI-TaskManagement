@@ -168,3 +168,32 @@ export function getFilteredCards(cards: CardSummary[], query: string): CardSumma
   const lower = query.toLowerCase();
   return cards.filter(c => c.title.toLowerCase().includes(lower));
 }
+
+export type SortOrder = 'manual' | 'priority' | 'dueDate';
+
+const priorityRank: Record<NonNullable<CardSummary['priority']>, number> = {
+  high: 0,
+  mid: 1,
+  low: 2,
+};
+
+export function sortCards(cards: CardSummary[], order: SortOrder): CardSummary[] {
+  if (order === 'manual') return cards;
+
+  const sorted = [...cards];
+  if (order === 'priority') {
+    sorted.sort((a, b) => {
+      const rankA = a.priority ? priorityRank[a.priority] : 3;
+      const rankB = b.priority ? priorityRank[b.priority] : 3;
+      return rankA - rankB;
+    });
+  } else {
+    sorted.sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return a.dueDate.localeCompare(b.dueDate);
+    });
+  }
+  return sorted;
+}
