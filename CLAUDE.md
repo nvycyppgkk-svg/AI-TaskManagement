@@ -10,7 +10,7 @@ TrelloライクなKanbanタスク管理ボード。
 
 | 層 | 技術 |
 |---|---|
-| フロントエンド | React 18 + TypeScript + Vite + Tailwind CSS + Zustand |
+| フロントエンド | React 18 + TypeScript + Vite + Tailwind CSS + Zustand + dnd-kit |
 | バックエンド | Java 21 + Spring Boot 3.x + Gradle |
 | DB | PostgreSQL 16 + Flyway |
 | インフラ | Docker / Docker Compose |
