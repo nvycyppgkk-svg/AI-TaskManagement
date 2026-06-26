@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { BoardDetail, CardSummary, CardsByList, CardDetail } from '../types';
 import { fetchBoardById } from '../api/boards';
-import { fetchCardsByListId, fetchCardById, createCard, updateCard, type CardUpdatePayload } from '../api/cards';
+import { fetchCardsByListId, fetchCardById, createCard, updateCard, deleteCard, type CardUpdatePayload } from '../api/cards';
 
 interface KanbanStore {
   board: BoardDetail | null;
@@ -17,6 +17,7 @@ interface KanbanStore {
   closeCardDetail: () => void;
   addCard: (listId: number, title: string) => Promise<void>;
   editCard: (cardId: number, payload: CardUpdatePayload) => Promise<void>;
+  removeCard: (cardId: number) => Promise<void>;
   moveCard: (cardId: number, targetListId: number, targetIndex: number) => Promise<void>;
   setSearchQuery: (q: string) => void;
   clearError: () => void;
@@ -119,6 +120,31 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       });
     } catch {
       set({ error: 'カードの更新に失敗しました' });
+    }
+  },
+
+  removeCard: async (cardId) => {
+    const prevState = get().cardsByList;
+    const sourceListId = Object.keys(prevState)
+      .map(Number)
+      .find(listId => prevState[listId].some(c => c.id === cardId));
+
+    try {
+      await deleteCard(cardId);
+      set(state => {
+        const cardsByList = { ...state.cardsByList };
+        if (sourceListId !== undefined) {
+          cardsByList[sourceListId] = cardsByList[sourceListId]
+            .filter(c => c.id !== cardId)
+            .map((c, i) => ({ ...c, position: i }));
+        }
+        return {
+          cardsByList,
+          selectedCard: state.selectedCard?.id === cardId ? null : state.selectedCard,
+        };
+      });
+    } catch {
+      set({ error: 'カードの削除に失敗しました' });
     }
   },
 

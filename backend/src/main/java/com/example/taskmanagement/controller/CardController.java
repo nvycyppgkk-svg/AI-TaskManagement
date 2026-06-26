@@ -45,4 +45,10 @@ public class CardController {
             @Valid @RequestBody CardUpdateRequest request) {
         return ResponseEntity.ok(cardService.updateCard(id, request));
     }
+
+    @DeleteMapping("/api/cards/{id}")
+    public ResponseEntity<Void> deleteCard(@PathVariable Integer id) {
+        cardService.deleteCard(id);
+        return ResponseEntity.noContent().build();
+    }
 }
