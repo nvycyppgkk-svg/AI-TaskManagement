@@ -52,6 +52,10 @@ export async function createCard(listId: number, title: string): Promise<CardDet
   };
 }
 
+export async function deleteCard(cardId: number): Promise<void> {
+  await apiClient.delete(`/api/cards/${cardId}`);
+}
+
 export async function updateCard(cardId: number, payload: CardUpdatePayload): Promise<CardDetail> {
   const body = {
     ...payload,

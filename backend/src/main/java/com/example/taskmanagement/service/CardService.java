@@ -105,6 +105,21 @@ public class CardService {
         return CardDetailResponse.from(saved);
     }
 
+    @Transactional
+    public void deleteCard(Integer id) {
+        Card card = cardRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Card", id));
+
+        Integer listId = card.getBoardList().getId();
+        cardRepository.delete(card);
+
+        List<Card> remaining = cardRepository.findByBoardListIdOrderByPositionAsc(listId);
+        for (int i = 0; i < remaining.size(); i++) {
+            remaining.get(i).setPosition(i);
+        }
+        cardRepository.saveAll(remaining);
+    }
+
     private void reorderCard(Card card, BoardList targetList, Integer requestedPosition) {
         boolean movingList = !targetList.getId().equals(card.getBoardList().getId());
 

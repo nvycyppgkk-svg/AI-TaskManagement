@@ -18,6 +18,7 @@ export default function CardDetailModal() {
   const selectedCard = useKanbanStore(s => s.selectedCard);
   const closeCardDetail = useKanbanStore(s => s.closeCardDetail);
   const editCard = useKanbanStore(s => s.editCard);
+  const removeCard = useKanbanStore(s => s.removeCard);
   const board = useKanbanStore(s => s.board);
 
   const [editing, setEditing] = useState(false);
@@ -27,6 +28,8 @@ export default function CardDetailModal() {
   const [dueDate, setDueDate] = useState('');
   const [listId, setListId] = useState<number | undefined>(undefined);
   const [saving, setSaving] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (selectedCard) {
@@ -36,6 +39,7 @@ export default function CardDetailModal() {
       setDueDate(selectedCard.dueDate ?? '');
       setListId(selectedCard.listId);
       setEditing(false);
+      setConfirmingDelete(false);
     }
   }, [selectedCard]);
 
@@ -60,6 +64,12 @@ export default function CardDetailModal() {
     });
     setSaving(false);
     setEditing(false);
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    await removeCard(selectedCard.id);
+    setDeleting(false);
   };
 
   return (
@@ -188,13 +198,37 @@ export default function CardDetailModal() {
                 {saving ? '保存中...' : '保存'}
               </button>
             </div>
+          ) : confirmingDelete ? (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmingDelete(false)}
+                className="text-sm px-4 py-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="text-sm px-4 py-1.5 rounded-md bg-red-600 text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {deleting ? '削除中...' : '本当に削除する'}
+              </button>
+            </div>
           ) : (
-            <button
-              onClick={() => setEditing(true)}
-              className="text-sm px-4 py-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
-            >
-              編集
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmingDelete(true)}
+                className="text-sm px-4 py-1.5 rounded-md border border-red-200 text-red-600 hover:bg-red-50"
+              >
+                削除
+              </button>
+              <button
+                onClick={() => setEditing(true)}
+                className="text-sm px-4 py-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                編集
+              </button>
+            </div>
           )}
         </div>
       </div>
