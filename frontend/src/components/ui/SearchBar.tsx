@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDebounce } from '../../hooks/useDebounce';
 import { useKanbanStore } from '../../store/kanbanStore';
-import { useEffect } from 'react';
 
 export default function SearchBar() {
   const [value, setValue] = useState('');
