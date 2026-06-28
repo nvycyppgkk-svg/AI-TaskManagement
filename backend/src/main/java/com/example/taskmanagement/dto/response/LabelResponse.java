@@ -17,7 +17,15 @@ public class LabelResponse {
         this.color = color;
     }
 
-    public Integer getId()  { return id; }
-    public String getName() { return name; }
-    public String getColor(){ return color; }
+    public Integer getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getColor() {
+        return color;
+    }
 }

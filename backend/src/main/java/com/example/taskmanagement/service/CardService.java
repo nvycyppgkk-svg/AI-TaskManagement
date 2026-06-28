@@ -9,12 +9,12 @@ import com.example.taskmanagement.entity.Card;
 import com.example.taskmanagement.exception.ResourceNotFoundException;
 import com.example.taskmanagement.repository.BoardListRepository;
 import com.example.taskmanagement.repository.CardRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CardService {
@@ -22,8 +22,7 @@ public class CardService {
     private final CardRepository cardRepository;
     private final BoardListRepository boardListRepository;
 
-    public CardService(CardRepository cardRepository,
-                       BoardListRepository boardListRepository) {
+    public CardService(CardRepository cardRepository, BoardListRepository boardListRepository) {
         this.cardRepository = cardRepository;
         this.boardListRepository = boardListRepository;
     }
@@ -34,38 +33,44 @@ public class CardService {
             throw new ResourceNotFoundException("List", listId);
         }
         return cardRepository.findByBoardListIdOrderByPositionAsc(listId).stream()
-            .map(CardSummaryResponse::from)
-            .collect(Collectors.toList());
+                .map(CardSummaryResponse::from)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public CardDetailResponse getCardById(Integer id) {
-        Card card = cardRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Card", id));
+        Card card =
+                cardRepository
+                        .findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Card", id));
         card.getLabels().size();
         return CardDetailResponse.from(card);
     }
 
     @Transactional
     public CardDetailResponse createCard(Integer listId, CardCreateRequest request) {
-        BoardList boardList = boardListRepository.findById(listId)
-            .orElseThrow(() -> new ResourceNotFoundException("List", listId));
+        BoardList boardList =
+                boardListRepository
+                        .findById(listId)
+                        .orElseThrow(() -> new ResourceNotFoundException("List", listId));
 
-        int nextPosition = cardRepository.findFirstByBoardListIdOrderByPositionDesc(listId)
-            .map(card -> card.getPosition() + 1)
-            .orElse(0);
+        int nextPosition =
+                cardRepository
+                        .findFirstByBoardListIdOrderByPositionDesc(listId)
+                        .map(card -> card.getPosition() + 1)
+                        .orElse(0);
 
         LocalDateTime now = LocalDateTime.now();
-        Card card = new Card(
-            boardList,
-            request.getTitle(),
-            request.getDescription(),
-            request.getPriority(),
-            request.getDueDate(),
-            nextPosition,
-            now,
-            now
-        );
+        Card card =
+                new Card(
+                        boardList,
+                        request.getTitle(),
+                        request.getDescription(),
+                        request.getPriority(),
+                        request.getDueDate(),
+                        nextPosition,
+                        now,
+                        now);
 
         Card saved = cardRepository.save(card);
         return CardDetailResponse.from(saved);
@@ -73,8 +78,10 @@ public class CardService {
 
     @Transactional
     public CardDetailResponse updateCard(Integer id, CardUpdateRequest request) {
-        Card card = cardRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Card", id));
+        Card card =
+                cardRepository
+                        .findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Card", id));
 
         if (request.getTitle() != null) {
             card.setTitle(request.getTitle());
@@ -88,13 +95,20 @@ public class CardService {
         if (request.getDueDate() != null) {
             card.setDueDate(request.getDueDate());
         }
-        boolean listChanged = request.getListId() != null && !request.getListId().equals(card.getBoardList().getId());
+        boolean listChanged =
+                request.getListId() != null
+                        && !request.getListId().equals(card.getBoardList().getId());
         if (listChanged || request.getPosition() != null) {
             Integer targetListId = listChanged ? request.getListId() : card.getBoardList().getId();
-            BoardList targetList = listChanged
-                ? boardListRepository.findById(targetListId)
-                    .orElseThrow(() -> new ResourceNotFoundException("List", targetListId))
-                : card.getBoardList();
+            BoardList targetList =
+                    listChanged
+                            ? boardListRepository
+                                    .findById(targetListId)
+                                    .orElseThrow(
+                                            () ->
+                                                    new ResourceNotFoundException(
+                                                            "List", targetListId))
+                            : card.getBoardList();
 
             reorderCard(card, targetList, request.getPosition());
         }
@@ -107,8 +121,10 @@ public class CardService {
 
     @Transactional
     public void deleteCard(Integer id) {
-        Card card = cardRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Card", id));
+        Card card =
+                cardRepository
+                        .findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Card", id));
 
         Integer listId = card.getBoardList().getId();
         cardRepository.delete(card);
@@ -123,13 +139,15 @@ public class CardService {
     private void reorderCard(Card card, BoardList targetList, Integer requestedPosition) {
         boolean movingList = !targetList.getId().equals(card.getBoardList().getId());
 
-        List<Card> targetCards = cardRepository.findByBoardListIdOrderByPositionAsc(targetList.getId()).stream()
-            .filter(c -> !c.getId().equals(card.getId()))
-            .collect(Collectors.toCollection(ArrayList::new));
+        List<Card> targetCards =
+                cardRepository.findByBoardListIdOrderByPositionAsc(targetList.getId()).stream()
+                        .filter(c -> !c.getId().equals(card.getId()))
+                        .collect(Collectors.toCollection(ArrayList::new));
 
-        int insertIndex = requestedPosition == null
-            ? targetCards.size()
-            : Math.max(0, Math.min(requestedPosition, targetCards.size()));
+        int insertIndex =
+                requestedPosition == null
+                        ? targetCards.size()
+                        : Math.max(0, Math.min(requestedPosition, targetCards.size()));
         targetCards.add(insertIndex, card);
 
         for (int i = 0; i < targetCards.size(); i++) {

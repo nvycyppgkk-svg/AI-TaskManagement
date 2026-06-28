@@ -12,13 +12,19 @@ public class BoardListResponse {
 
     public static BoardListResponse from(BoardList boardList) {
         return new BoardListResponse(
-            boardList.getId(), boardList.getName(), boardList.getPosition(),
-            boardList.getCreatedAt(), boardList.getUpdatedAt()
-        );
+                boardList.getId(),
+                boardList.getName(),
+                boardList.getPosition(),
+                boardList.getCreatedAt(),
+                boardList.getUpdatedAt());
     }
 
-    private BoardListResponse(Integer id, String name, Integer position,
-                               LocalDateTime createdAt, LocalDateTime updatedAt) {
+    private BoardListResponse(
+            Integer id,
+            String name,
+            Integer position,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.position = position;
@@ -26,9 +32,23 @@ public class BoardListResponse {
         this.updatedAt = updatedAt;
     }
 
-    public Integer getId()              { return id; }
-    public String getName()             { return name; }
-    public Integer getPosition()        { return position; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public Integer getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Integer getPosition() {
+        return position;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 }

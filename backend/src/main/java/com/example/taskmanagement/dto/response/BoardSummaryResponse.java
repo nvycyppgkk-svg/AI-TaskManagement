@@ -11,21 +11,31 @@ public class BoardSummaryResponse {
 
     public static BoardSummaryResponse from(Board board) {
         return new BoardSummaryResponse(
-            board.getId(), board.getName(),
-            board.getCreatedAt(), board.getUpdatedAt()
-        );
+                board.getId(), board.getName(),
+                board.getCreatedAt(), board.getUpdatedAt());
     }
 
-    private BoardSummaryResponse(Integer id, String name,
-                                  LocalDateTime createdAt, LocalDateTime updatedAt) {
+    private BoardSummaryResponse(
+            Integer id, String name, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    public Integer getId()              { return id; }
-    public String getName()             { return name; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public Integer getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 }
