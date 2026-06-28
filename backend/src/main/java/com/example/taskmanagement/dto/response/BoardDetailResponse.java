@@ -13,17 +13,22 @@ public class BoardDetailResponse {
     private final LocalDateTime updatedAt;
 
     public static BoardDetailResponse from(Board board) {
-        List<BoardListResponse> listResponses = board.getLists().stream()
-            .map(BoardListResponse::from)
-            .collect(Collectors.toList());
+        List<BoardListResponse> listResponses =
+                board.getLists().stream().map(BoardListResponse::from).collect(Collectors.toList());
         return new BoardDetailResponse(
-            board.getId(), board.getName(), listResponses,
-            board.getCreatedAt(), board.getUpdatedAt()
-        );
+                board.getId(),
+                board.getName(),
+                listResponses,
+                board.getCreatedAt(),
+                board.getUpdatedAt());
     }
 
-    private BoardDetailResponse(Integer id, String name, List<BoardListResponse> lists,
-                                 LocalDateTime createdAt, LocalDateTime updatedAt) {
+    private BoardDetailResponse(
+            Integer id,
+            String name,
+            List<BoardListResponse> lists,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
         this.id = id;
         this.name = name;
         this.lists = lists;
@@ -31,9 +36,23 @@ public class BoardDetailResponse {
         this.updatedAt = updatedAt;
     }
 
-    public Integer getId()                    { return id; }
-    public String getName()                   { return name; }
-    public List<BoardListResponse> getLists() { return lists; }
-    public LocalDateTime getCreatedAt()       { return createdAt; }
-    public LocalDateTime getUpdatedAt()       { return updatedAt; }
+    public Integer getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<BoardListResponse> getLists() {
+        return lists;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
 }

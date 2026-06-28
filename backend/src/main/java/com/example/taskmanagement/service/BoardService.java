@@ -7,10 +7,10 @@ import com.example.taskmanagement.entity.Board;
 import com.example.taskmanagement.exception.ResourceNotFoundException;
 import com.example.taskmanagement.repository.BoardListRepository;
 import com.example.taskmanagement.repository.BoardRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BoardService {
@@ -18,8 +18,7 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final BoardListRepository boardListRepository;
 
-    public BoardService(BoardRepository boardRepository,
-                        BoardListRepository boardListRepository) {
+    public BoardService(BoardRepository boardRepository, BoardListRepository boardListRepository) {
         this.boardRepository = boardRepository;
         this.boardListRepository = boardListRepository;
     }
@@ -27,14 +26,16 @@ public class BoardService {
     @Transactional(readOnly = true)
     public List<BoardSummaryResponse> getAllBoards() {
         return boardRepository.findAll().stream()
-            .map(BoardSummaryResponse::from)
-            .collect(Collectors.toList());
+                .map(BoardSummaryResponse::from)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public BoardDetailResponse getBoardById(Integer id) {
-        Board board = boardRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Board", id));
+        Board board =
+                boardRepository
+                        .findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("Board", id));
         board.getLists().size();
         return BoardDetailResponse.from(board);
     }
@@ -45,7 +46,7 @@ public class BoardService {
             throw new ResourceNotFoundException("Board", boardId);
         }
         return boardListRepository.findByBoardIdOrderByPositionAsc(boardId).stream()
-            .map(BoardListResponse::from)
-            .collect(Collectors.toList());
+                .map(BoardListResponse::from)
+                .collect(Collectors.toList());
     }
 }

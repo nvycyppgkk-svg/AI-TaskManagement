@@ -40,17 +40,22 @@ public class Card {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "card_labels",
-        joinColumns = @JoinColumn(name = "card_id"),
-        inverseJoinColumns = @JoinColumn(name = "label_id")
-    )
+            name = "card_labels",
+            joinColumns = @JoinColumn(name = "card_id"),
+            inverseJoinColumns = @JoinColumn(name = "label_id"))
     private List<Label> labels = new ArrayList<>();
 
-    public Card() {
-    }
+    public Card() {}
 
-    public Card(BoardList boardList, String title, String description, String priority,
-                LocalDate dueDate, Integer position, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Card(
+            BoardList boardList,
+            String title,
+            String description,
+            String priority,
+            LocalDate dueDate,
+            Integer position,
+            LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
         this.boardList = boardList;
         this.title = title;
         this.description = description;
@@ -61,22 +66,71 @@ public class Card {
         this.updatedAt = updatedAt;
     }
 
-    public Integer getId()              { return id; }
-    public BoardList getBoardList()     { return boardList; }
-    public String getTitle()            { return title; }
-    public String getDescription()      { return description; }
-    public LocalDate getDueDate()       { return dueDate; }
-    public String getPriority()         { return priority; }
-    public Integer getPosition()        { return position; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public List<Label> getLabels()      { return labels; }
+    public Integer getId() {
+        return id;
+    }
 
-    public void setBoardList(BoardList boardList)   { this.boardList = boardList; }
-    public void setTitle(String title)              { this.title = title; }
-    public void setDescription(String description)  { this.description = description; }
-    public void setDueDate(LocalDate dueDate)       { this.dueDate = dueDate; }
-    public void setPriority(String priority)        { this.priority = priority; }
-    public void setPosition(Integer position)       { this.position = position; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public BoardList getBoardList() {
+        return boardList;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public Integer getPosition() {
+        return position;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public List<Label> getLabels() {
+        return labels;
+    }
+
+    public void setBoardList(BoardList boardList) {
+        this.boardList = boardList;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    public void setPosition(Integer position) {
+        this.position = position;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

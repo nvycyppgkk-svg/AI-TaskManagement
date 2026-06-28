@@ -14,13 +14,21 @@ public class CardSummaryResponse {
 
     public static CardSummaryResponse from(Card card) {
         return new CardSummaryResponse(
-            card.getId(), card.getTitle(), card.getPriority(),
-            card.getDueDate(), card.getPosition(), card.getCreatedAt()
-        );
+                card.getId(),
+                card.getTitle(),
+                card.getPriority(),
+                card.getDueDate(),
+                card.getPosition(),
+                card.getCreatedAt());
     }
 
-    private CardSummaryResponse(Integer id, String title, String priority,
-                                 LocalDate dueDate, Integer position, LocalDateTime createdAt) {
+    private CardSummaryResponse(
+            Integer id,
+            String title,
+            String priority,
+            LocalDate dueDate,
+            Integer position,
+            LocalDateTime createdAt) {
         this.id = id;
         this.title = title;
         this.priority = priority;
@@ -29,10 +37,27 @@ public class CardSummaryResponse {
         this.createdAt = createdAt;
     }
 
-    public Integer getId()              { return id; }
-    public String getTitle()            { return title; }
-    public String getPriority()         { return priority; }
-    public LocalDate getDueDate()       { return dueDate; }
-    public Integer getPosition()        { return position; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public Integer getId() {
+        return id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public LocalDate getDueDate() {
+        return dueDate;
+    }
+
+    public Integer getPosition() {
+        return position;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 }

@@ -29,16 +29,39 @@ public class BoardList {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "boardList", cascade = CascadeType.ALL,
-               orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(
+            mappedBy = "boardList",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true,
+            fetch = FetchType.LAZY)
     @OrderBy("position ASC")
     private List<Card> cards = new ArrayList<>();
 
-    public Integer getId()              { return id; }
-    public Board getBoard()             { return board; }
-    public String getName()             { return name; }
-    public Integer getPosition()        { return position; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public List<Card> getCards()        { return cards; }
+    public Integer getId() {
+        return id;
+    }
+
+    public Board getBoard() {
+        return board;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Integer getPosition() {
+        return position;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public List<Card> getCards() {
+        return cards;
+    }
 }
