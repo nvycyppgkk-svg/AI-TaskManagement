@@ -15,3 +15,17 @@ export async function fetchListsByBoardId(boardId: number): Promise<BoardList[]>
   const res = await apiClient.get<BoardList[]>(`/api/boards/${boardId}/lists`);
   return res.data;
 }
+
+export async function createBoard(name: string): Promise<BoardSummary> {
+  const res = await apiClient.post<BoardSummary>('/api/boards', { name });
+  return res.data;
+}
+
+export async function updateBoard(id: number, name: string): Promise<BoardSummary> {
+  const res = await apiClient.patch<BoardSummary>(`/api/boards/${id}`, { name });
+  return res.data;
+}
+
+export async function deleteBoard(id: number): Promise<void> {
+  await apiClient.delete(`/api/boards/${id}`);
+}

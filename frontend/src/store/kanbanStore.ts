@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { BoardDetail, CardSummary, CardsByList, CardDetail } from '../types';
-import { fetchBoardById } from '../api/boards';
+import { fetchBoardById, updateBoard, deleteBoard } from '../api/boards';
 import { fetchCardsByListId, fetchCardById, createCard, updateCard, deleteCard, type CardUpdatePayload } from '../api/cards';
 
 interface KanbanStore {
@@ -19,6 +19,8 @@ interface KanbanStore {
   editCard: (cardId: number, payload: CardUpdatePayload) => Promise<void>;
   removeCard: (cardId: number) => Promise<void>;
   moveCard: (cardId: number, targetListId: number, targetIndex: number) => Promise<void>;
+  renameCurrentBoard: (name: string) => Promise<void>;
+  deleteCurrentBoard: () => Promise<void>;
   setSearchQuery: (q: string) => void;
   clearError: () => void;
 }
@@ -182,6 +184,30 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       });
     } catch {
       set({ cardsByList: prevState, error: 'カードの移動に失敗しました' });
+    }
+  },
+
+  renameCurrentBoard: async (name) => {
+    const board = get().board;
+    if (!board) return;
+    try {
+      const updated = await updateBoard(board.id, name);
+      set(state => ({
+        board: state.board ? { ...state.board, name: updated.name, updatedAt: updated.updatedAt } : null,
+      }));
+    } catch {
+      set({ error: 'ボード名の変更に失敗しました' });
+    }
+  },
+
+  deleteCurrentBoard: async () => {
+    const board = get().board;
+    if (!board) return;
+    try {
+      await deleteBoard(board.id);
+      set({ board: null, cardsByList: {} });
+    } catch {
+      set({ error: 'ボードの削除に失敗しました' });
     }
   },
 

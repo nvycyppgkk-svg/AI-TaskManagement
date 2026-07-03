@@ -6,7 +6,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ErrorToast from '../components/ui/ErrorToast';
 
 export default function BoardsPage() {
-  const { boards, loading, error, loadBoards } = useBoardStore();
+  const { boards, loading, error, loadBoards, addBoard, renameBoard, removeBoard } = useBoardStore();
 
   useEffect(() => {
     loadBoards();
@@ -18,7 +18,7 @@ export default function BoardsPage() {
       {loading ? (
         <LoadingSpinner />
       ) : (
-        <BoardGrid boards={boards} />
+        <BoardGrid boards={boards} onAdd={addBoard} onRename={renameBoard} onDelete={removeBoard} />
       )}
       {error && (
         <ErrorToast message={error} onClose={() => useBoardStore.setState({ error: null })} />

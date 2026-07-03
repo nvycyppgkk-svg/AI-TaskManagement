@@ -9,7 +9,7 @@ import ErrorToast from '../components/ui/ErrorToast';
 
 export default function BoardDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { board, loading, error, loadBoard, clearError } = useKanbanStore();
+  const { board, loading, error, loadBoard, clearError, renameCurrentBoard, deleteCurrentBoard } = useKanbanStore();
 
   useEffect(() => {
     if (id) loadBoard(Number(id));
@@ -17,7 +17,12 @@ export default function BoardDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#f0f2f5] flex flex-col">
-      <Header showBack boardName={board?.name} />
+      <Header
+        showBack
+        boardName={board?.name}
+        onRenameBoard={board ? renameCurrentBoard : undefined}
+        onDeleteBoard={board ? deleteCurrentBoard : undefined}
+      />
       <div className="flex-1 overflow-hidden">
         {loading ? (
           <LoadingSpinner />
