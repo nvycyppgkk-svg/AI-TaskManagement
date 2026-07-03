@@ -49,4 +49,16 @@ public class Board {
     public List<BoardList> getLists() {
         return lists;
     }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }
