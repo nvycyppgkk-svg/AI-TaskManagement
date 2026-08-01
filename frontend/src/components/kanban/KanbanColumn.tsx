@@ -19,10 +19,17 @@ export default function KanbanColumn({ list }: Props) {
   const searchQuery = useKanbanStore(s => s.searchQuery);
   const cardsLoading = useKanbanStore(s => s.cardsLoading);
   const addCard = useKanbanStore(s => s.addCard);
+  const renameList = useKanbanStore(s => s.renameList);
+  const removeList = useKanbanStore(s => s.removeList);
 
   const [newTitle, setNewTitle] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [sortOrder, setSortOrder] = useState<SortOrder>('manual');
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(list.name);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [savingName, setSavingName] = useState(false);
 
   const allCards = cardsByList[list.id] ?? [];
   const visibleCards = sortCards(getFilteredCards(allCards, searchQuery), sortOrder);
@@ -42,22 +49,101 @@ export default function KanbanColumn({ list }: Props) {
     setNewTitle('');
   };
 
+  const handleRename = async () => {
+    if (!nameInput.trim() || nameInput.trim() === list.name) {
+      setEditingName(false);
+      setNameInput(list.name);
+      return;
+    }
+    setSavingName(true);
+    await renameList(list.id, nameInput.trim());
+    setSavingName(false);
+    setEditingName(false);
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    await removeList(list.id);
+    setDeleting(false);
+  };
+
   return (
     <div className="flex-shrink-0 w-64 bg-[#ebecf0] rounded-xl flex flex-col max-h-full">
-      <div className="px-3 pt-3 pb-2 flex items-center justify-between gap-2">
-        <h3 className="font-semibold text-sm text-gray-700 truncate">{list.name}</h3>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <select
-            value={sortOrder}
-            onChange={e => setSortOrder(e.target.value as SortOrder)}
-            className="text-xs text-gray-500 bg-white rounded-full px-2 py-0.5 border border-gray-200 focus:outline-none"
-          >
-            {sortOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-          <span className="text-xs text-gray-400 bg-white rounded-full px-2 py-0.5">{visibleCards.length}</span>
-        </div>
+      <div className="px-3 pt-3 pb-2">
+        {editingName ? (
+          <div className="flex flex-col gap-1.5">
+            <input
+              autoFocus
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') { setEditingName(false); setNameInput(list.name); } }}
+              className="w-full bg-white rounded px-2 py-1 text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-blue/40"
+            />
+            <div className="flex gap-1">
+              <button
+                onClick={() => { setEditingName(false); setNameInput(list.name); }}
+                className="flex-1 text-xs px-2 py-0.5 rounded border border-gray-300 text-gray-500 hover:bg-gray-200"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleRename}
+                disabled={savingName || !nameInput.trim()}
+                className="flex-1 text-xs px-2 py-0.5 rounded bg-brand-blue text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {savingName ? '保存中...' : '保存'}
+              </button>
+            </div>
+          </div>
+        ) : confirmingDelete ? (
+          <div className="flex flex-col gap-1.5">
+            <p className="text-xs text-gray-600">このリストを削除しますか？</p>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setConfirmingDelete(false)}
+                className="flex-1 text-xs px-2 py-0.5 rounded border border-gray-300 text-gray-500 hover:bg-gray-200"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 text-xs px-2 py-0.5 rounded bg-red-600 text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {deleting ? '削除中...' : '削除'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-2">
+            <h3
+              className="font-semibold text-sm text-gray-700 truncate cursor-pointer hover:text-brand-blue"
+              onClick={() => { setNameInput(list.name); setEditingName(true); }}
+              title="クリックで名前を変更"
+            >
+              {list.name}
+            </h3>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <select
+                value={sortOrder}
+                onChange={e => setSortOrder(e.target.value as SortOrder)}
+                className="text-xs text-gray-500 bg-white rounded-full px-2 py-0.5 border border-gray-200 focus:outline-none"
+              >
+                {sortOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <span className="text-xs text-gray-400 bg-white rounded-full px-2 py-0.5">{visibleCards.length}</span>
+              <button
+                onClick={() => setConfirmingDelete(true)}
+                title="リストを削除"
+                className="text-gray-400 hover:text-red-500 text-xs px-1 transition"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div

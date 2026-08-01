@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { BoardDetail, CardSummary, CardsByList, CardDetail } from '../types';
 import { fetchBoardById, updateBoard, deleteBoard } from '../api/boards';
 import { fetchCardsByListId, fetchCardById, createCard, updateCard, deleteCard, type CardUpdatePayload } from '../api/cards';
+import { createList, updateList, deleteList } from '../api/lists';
 
 interface KanbanStore {
   board: BoardDetail | null;
@@ -21,6 +22,9 @@ interface KanbanStore {
   moveCard: (cardId: number, targetListId: number, targetIndex: number) => Promise<void>;
   renameCurrentBoard: (name: string) => Promise<void>;
   deleteCurrentBoard: () => Promise<void>;
+  addList: (boardId: number, name: string) => Promise<void>;
+  renameList: (listId: number, name: string) => Promise<void>;
+  removeList: (listId: number) => Promise<void>;
   setSearchQuery: (q: string) => void;
   clearError: () => void;
 }
@@ -208,6 +212,54 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       set({ board: null, cardsByList: {} });
     } catch {
       set({ error: 'ボードの削除に失敗しました' });
+    }
+  },
+
+  addList: async (boardId, name) => {
+    try {
+      const newList = await createList(boardId, name);
+      set(state => ({
+        board: state.board
+          ? { ...state.board, lists: [...state.board.lists, newList] }
+          : null,
+        cardsByList: { ...state.cardsByList, [newList.id]: [] },
+      }));
+    } catch {
+      set({ error: 'リストの作成に失敗しました' });
+    }
+  },
+
+  renameList: async (listId, name) => {
+    try {
+      const updated = await updateList(listId, name);
+      set(state => ({
+        board: state.board
+          ? {
+              ...state.board,
+              lists: state.board.lists.map(l => l.id === listId ? { ...l, name: updated.name } : l),
+            }
+          : null,
+      }));
+    } catch {
+      set({ error: 'リスト名の変更に失敗しました' });
+    }
+  },
+
+  removeList: async (listId) => {
+    try {
+      await deleteList(listId);
+      set(state => {
+        const cardsByList = { ...state.cardsByList };
+        delete cardsByList[listId];
+        return {
+          board: state.board
+            ? { ...state.board, lists: state.board.lists.filter(l => l.id !== listId) }
+            : null,
+          cardsByList,
+        };
+      });
+    } catch {
+      set({ error: 'リストの削除に失敗しました' });
     }
   },
 
