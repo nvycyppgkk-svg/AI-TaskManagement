@@ -61,6 +61,19 @@ public class BoardService {
         board.setCreatedAt(now);
         board.setUpdatedAt(now);
         Board saved = boardRepository.save(board);
+
+        String[] defaultListNames = {"To Do", "進行中", "完了"};
+        for (int i = 0; i < defaultListNames.length; i++) {
+            com.example.taskmanagement.entity.BoardList list =
+                    new com.example.taskmanagement.entity.BoardList();
+            list.setBoard(saved);
+            list.setName(defaultListNames[i]);
+            list.setPosition(i);
+            list.setCreatedAt(now);
+            list.setUpdatedAt(now);
+            boardListRepository.save(list);
+        }
+
         return BoardSummaryResponse.from(saved);
     }
 
