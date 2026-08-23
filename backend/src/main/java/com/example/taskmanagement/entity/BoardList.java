@@ -64,4 +64,24 @@ public class BoardList {
     public List<Card> getCards() {
         return cards;
     }
+
+    public void setBoard(Board board) {
+        this.board = board;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPosition(Integer position) {
+        this.position = position;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }
