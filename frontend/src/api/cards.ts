@@ -37,6 +37,7 @@ export async function fetchCardsByListId(listId: number): Promise<CardSummary[]>
   return res.data.map(card => ({
     ...card,
     priority: normalizePriority(card.priority),
+    labels: card.labels ?? [],
   }));
 }
 
@@ -45,6 +46,7 @@ export async function fetchCardById(id: number): Promise<CardDetail> {
   return {
     ...res.data,
     priority: normalizePriority(res.data.priority),
+    labels: res.data.labels ?? [],
   };
 }
 
@@ -53,6 +55,7 @@ export async function createCard(listId: number, title: string): Promise<CardDet
   return {
     ...res.data,
     priority: normalizePriority(res.data.priority),
+    labels: res.data.labels ?? [],
   };
 }
 
@@ -69,5 +72,6 @@ export async function updateCard(cardId: number, payload: CardUpdatePayload): Pr
   return {
     ...res.data,
     priority: normalizePriority(res.data.priority),
+    labels: res.data.labels ?? [],
   };
 }

@@ -32,7 +32,7 @@ public class CardService {
         if (!boardListRepository.existsById(listId)) {
             throw new ResourceNotFoundException("List", listId);
         }
-        return cardRepository.findByBoardListIdOrderByPositionAsc(listId).stream()
+        return cardRepository.findByBoardListIdWithLabels(listId).stream()
                 .map(CardSummaryResponse::from)
                 .collect(Collectors.toList());
     }
@@ -41,9 +41,8 @@ public class CardService {
     public CardDetailResponse getCardById(Integer id) {
         Card card =
                 cardRepository
-                        .findById(id)
+                        .findByIdWithLabels(id)
                         .orElseThrow(() -> new ResourceNotFoundException("Card", id));
-        card.getLabels().size();
         return CardDetailResponse.from(card);
     }
 

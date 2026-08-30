@@ -36,6 +36,7 @@ export interface CardSummary {
   dueDate: string | null;
   position: number;
   createdAt: string;
+  labels: Label[];
 }
 
 export interface CardDetail {

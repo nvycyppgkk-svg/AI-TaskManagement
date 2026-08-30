@@ -30,6 +30,11 @@ export default function CardDetailModal() {
   const [saving, setSaving] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [pickingLabel, setPickingLabel] = useState(false);
+
+  const labels = useKanbanStore(s => s.labels);
+  const attachCardLabel = useKanbanStore(s => s.attachCardLabel);
+  const detachCardLabel = useKanbanStore(s => s.detachCardLabel);
 
   useEffect(() => {
     if (selectedCard) {
@@ -40,6 +45,7 @@ export default function CardDetailModal() {
       setListId(selectedCard.listId);
       setEditing(false);
       setConfirmingDelete(false);
+      setPickingLabel(false);
     }
   }, [selectedCard]);
 
@@ -148,19 +154,62 @@ export default function CardDetailModal() {
           </div>
         )}
 
-        {selectedCard.labels.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
+        <div className="mb-4">
+          <p className="text-xs text-gray-500 mb-2">ラベル</p>
+          <div className="flex flex-wrap gap-2 items-center">
             {selectedCard.labels.map(label => (
               <span
                 key={label.id}
-                className="text-xs px-3 py-1 rounded-full text-white font-medium"
+                className="text-xs px-3 py-1 rounded-full text-white font-medium inline-flex items-center gap-1"
                 style={{ backgroundColor: label.color }}
               >
                 {label.name}
+                <button
+                  onClick={() => detachCardLabel(selectedCard.id, label.id)}
+                  className="text-white/80 hover:text-white leading-none"
+                  aria-label={`${label.name}を外す`}
+                >
+                  ×
+                </button>
               </span>
             ))}
+            <button
+              onClick={() => setPickingLabel(v => !v)}
+              className="text-xs px-3 py-1 rounded-full border border-dashed border-brand-blue text-brand-blue hover:bg-blue-50"
+            >
+              + ラベルを追加
+            </button>
           </div>
-        )}
+          {pickingLabel && (
+            <div className="mt-2 border border-gray-200 rounded-lg p-2 max-h-40 overflow-y-auto">
+              {labels.length === 0 ? (
+                <p className="text-xs text-gray-400 px-1 py-1">先にラベル管理から作成してください</p>
+              ) : (
+                labels.map(label => {
+                  const attached = selectedCard.labels.some(l => l.id === label.id);
+                  return (
+                    <button
+                      key={label.id}
+                      disabled={attached}
+                      onClick={async () => {
+                        await attachCardLabel(selectedCard.id, label.id);
+                        setPickingLabel(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 text-left disabled:opacity-40"
+                    >
+                      <span
+                        className="w-3.5 h-3.5 rounded-full shrink-0"
+                        style={{ backgroundColor: label.color }}
+                      />
+                      <span className="text-sm text-gray-800">{label.name}</span>
+                      {attached && <span className="ml-auto text-xs text-gray-400">付与済み</span>}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
 
         {editing ? (
           <textarea
