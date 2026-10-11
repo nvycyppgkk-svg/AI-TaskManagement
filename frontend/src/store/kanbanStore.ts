@@ -1,19 +1,42 @@
 import { create } from 'zustand';
-import type { BoardDetail, CardSummary, CardsByList, CardDetail } from '../types';
+import type { BoardDetail, CardSummary, CardsByList, CardDetail, Label } from '../types';
 import { fetchBoardById, updateBoard, deleteBoard } from '../api/boards';
 import { fetchCardsByListId, fetchCardById, createCard, updateCard, deleteCard, type CardUpdatePayload } from '../api/cards';
 import { createList, updateList, deleteList } from '../api/lists';
+import { fetchLabels, createLabel, deleteLabel, attachLabel, detachLabel } from '../api/labels';
+
+function toSummary(card: CardDetail): CardSummary {
+  return {
+    id: card.id,
+    title: card.title,
+    priority: card.priority,
+    dueDate: card.dueDate,
+    position: card.position,
+    createdAt: card.createdAt,
+    labels: card.labels ?? [],
+  };
+}
+
+function replaceSummary(cardsByList: CardsByList, card: CardDetail): CardsByList {
+  const next: CardsByList = {};
+  for (const [listId, cards] of Object.entries(cardsByList)) {
+    next[Number(listId)] = cards.map(c => (c.id === card.id ? { ...toSummary(card), position: c.position } : c));
+  }
+  return next;
+}
 
 interface KanbanStore {
   board: BoardDetail | null;
   cardsByList: CardsByList;
   selectedCard: CardDetail | null;
+  labels: Label[];
   searchQuery: string;
   loading: boolean;
   cardsLoading: boolean;
   error: string | null;
   loadBoard: (id: number) => Promise<void>;
   loadAllCards: (listIds: number[]) => Promise<void>;
+  loadLabels: () => Promise<void>;
   openCardDetail: (cardId: number) => Promise<void>;
   closeCardDetail: () => void;
   addCard: (listId: number, title: string) => Promise<void>;
@@ -25,6 +48,10 @@ interface KanbanStore {
   addList: (boardId: number, name: string) => Promise<void>;
   renameList: (listId: number, name: string) => Promise<void>;
   removeList: (listId: number) => Promise<void>;
+  addLabel: (name: string, color: string) => Promise<void>;
+  removeLabel: (labelId: number) => Promise<void>;
+  attachCardLabel: (cardId: number, labelId: number) => Promise<void>;
+  detachCardLabel: (cardId: number, labelId: number) => Promise<void>;
   setSearchQuery: (q: string) => void;
   clearError: () => void;
 }
@@ -33,6 +60,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
   board: null,
   cardsByList: {},
   selectedCard: null,
+  labels: [],
   searchQuery: '',
   loading: false,
   cardsLoading: false,
@@ -43,9 +71,21 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
     try {
       const board = await fetchBoardById(id);
       set({ board, loading: false });
-      await get().loadAllCards(board.lists.map(l => l.id));
+      await Promise.all([
+        get().loadAllCards(board.lists.map(l => l.id)),
+        get().loadLabels(),
+      ]);
     } catch {
       set({ error: 'ボードの取得に失敗しました', loading: false });
+    }
+  },
+
+  loadLabels: async () => {
+    try {
+      const labels = await fetchLabels();
+      set({ labels });
+    } catch {
+      set({ error: 'ラベルの取得に失敗しました' });
     }
   },
 
@@ -80,14 +120,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           ...state.cardsByList,
           [listId]: [
             ...(state.cardsByList[listId] ?? []),
-            {
-              id: card.id,
-              title: card.title,
-              priority: card.priority,
-              dueDate: card.dueDate,
-              position: card.position,
-              createdAt: card.createdAt,
-            },
+            toSummary(card),
           ],
         },
       }));
@@ -109,15 +142,7 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
           cardsByList[sourceListId] = cardsByList[sourceListId].filter(c => c.id !== cardId);
         }
 
-        const summary: CardSummary = {
-          id: updated.id,
-          title: updated.title,
-          priority: updated.priority,
-          dueDate: updated.dueDate,
-          position: updated.position,
-          createdAt: updated.createdAt,
-        };
-        cardsByList[updated.listId] = [...(cardsByList[updated.listId] ?? []), summary];
+        cardsByList[updated.listId] = [...(cardsByList[updated.listId] ?? []), toSummary(updated)];
 
         return {
           cardsByList,
@@ -260,6 +285,67 @@ export const useKanbanStore = create<KanbanStore>((set, get) => ({
       });
     } catch {
       set({ error: 'リストの削除に失敗しました' });
+    }
+  },
+
+  addLabel: async (name, color) => {
+    try {
+      const created = await createLabel(name, color);
+      set(state => ({ labels: [...state.labels, created] }));
+    } catch {
+      set({ error: 'ラベルの作成に失敗しました' });
+    }
+  },
+
+  removeLabel: async (labelId) => {
+    try {
+      await deleteLabel(labelId);
+      set(state => {
+        const cardsByList: CardsByList = {};
+        for (const [listId, cards] of Object.entries(state.cardsByList)) {
+          cardsByList[Number(listId)] = cards.map(card => ({
+            ...card,
+            labels: (card.labels ?? []).filter(l => l.id !== labelId),
+          }));
+        }
+        const selectedCard = state.selectedCard
+          ? {
+              ...state.selectedCard,
+              labels: state.selectedCard.labels.filter(l => l.id !== labelId),
+            }
+          : null;
+        return {
+          labels: state.labels.filter(l => l.id !== labelId),
+          cardsByList,
+          selectedCard,
+        };
+      });
+    } catch {
+      set({ error: 'ラベルの削除に失敗しました' });
+    }
+  },
+
+  attachCardLabel: async (cardId, labelId) => {
+    try {
+      const updated = await attachLabel(cardId, labelId);
+      set(state => ({
+        selectedCard: state.selectedCard?.id === cardId ? updated : state.selectedCard,
+        cardsByList: replaceSummary(state.cardsByList, updated),
+      }));
+    } catch {
+      set({ error: 'ラベルの付与に失敗しました' });
+    }
+  },
+
+  detachCardLabel: async (cardId, labelId) => {
+    try {
+      const updated = await detachLabel(cardId, labelId);
+      set(state => ({
+        selectedCard: state.selectedCard?.id === cardId ? updated : state.selectedCard,
+        cardsByList: replaceSummary(state.cardsByList, updated),
+      }));
+    } catch {
+      set({ error: 'ラベルの解除に失敗しました' });
     }
   },
 

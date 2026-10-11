@@ -7,9 +7,10 @@ interface Props {
   boardName?: string;
   onRenameBoard?: (name: string) => Promise<void>;
   onDeleteBoard?: () => Promise<void>;
+  onOpenLabels?: () => void;
 }
 
-export default function Header({ showBack, boardName, onRenameBoard, onDeleteBoard }: Props) {
+export default function Header({ showBack, boardName, onRenameBoard, onDeleteBoard, onOpenLabels }: Props) {
   const navigate = useNavigate();
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -97,6 +98,14 @@ export default function Header({ showBack, boardName, onRenameBoard, onDeleteBoa
           <span className="font-bold text-lg flex-1 truncate min-w-0">
             {boardName ?? 'タスク管理アプリ'}
           </span>
+          {showBack && onOpenLabels && (
+            <button
+              onClick={onOpenLabels}
+              className="text-white/60 hover:text-white text-sm shrink-0 transition"
+            >
+              ラベル管理
+            </button>
+          )}
           {showBack && onRenameBoard && (
             <button
               onClick={startEdit}

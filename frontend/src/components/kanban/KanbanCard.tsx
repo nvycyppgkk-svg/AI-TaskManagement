@@ -60,6 +60,15 @@ export default function KanbanCard({ card, listId, index, dragDisabled }: Props)
             📅 {card.dueDate}
           </span>
         )}
+        {(card.labels ?? []).map(label => (
+          <span
+            key={label.id}
+            className="text-xs px-2 py-0.5 rounded-full text-white font-medium"
+            style={{ backgroundColor: label.color }}
+          >
+            {label.name}
+          </span>
+        ))}
       </div>
     </button>
   );

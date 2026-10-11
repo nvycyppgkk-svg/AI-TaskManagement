@@ -35,4 +35,16 @@ public class Label {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }
