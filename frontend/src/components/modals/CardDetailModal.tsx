@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useKanbanStore } from '../../store/kanbanStore';
 import type { Priority } from '../../types';
+import { validateName } from '../../utils/validation';
 
 const priorityStyles: Record<string, string> = {
   high: 'bg-red-100 text-red-700',
@@ -31,6 +32,7 @@ export default function CardDetailModal() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [pickingLabel, setPickingLabel] = useState(false);
+  const [titleError, setTitleError] = useState<string | null>(null);
 
   const labels = useKanbanStore(s => s.labels);
   const attachCardLabel = useKanbanStore(s => s.attachCardLabel);
@@ -44,6 +46,7 @@ export default function CardDetailModal() {
       setDueDate(selectedCard.dueDate ?? '');
       setListId(selectedCard.listId);
       setEditing(false);
+      setTitleError(null);
       setConfirmingDelete(false);
       setPickingLabel(false);
     }
@@ -60,9 +63,14 @@ export default function CardDetailModal() {
   if (!selectedCard) return null;
 
   const handleSave = async () => {
+    const error = validateName(title, 'タイトル');
+    if (error) {
+      setTitleError(error);
+      return;
+    }
     setSaving(true);
     await editCard(selectedCard.id, {
-      title,
+      title: title.trim(),
       description: description || null,
       priority,
       dueDate: dueDate || null,
@@ -95,11 +103,15 @@ export default function CardDetailModal() {
         </button>
 
         {editing ? (
-          <input
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            className="text-xl font-bold text-gray-800 pr-8 mb-4 w-full border-b border-gray-200 focus:outline-none focus:border-brand-blue"
-          />
+          <div className="mb-4 pr-8">
+            <input
+              value={title}
+              onChange={e => { setTitle(e.target.value); setTitleError(null); }}
+              aria-invalid={titleError !== null}
+              className={`text-xl font-bold text-gray-800 w-full border-b focus:outline-none focus:border-brand-blue ${titleError ? 'border-red-400' : 'border-gray-200'}`}
+            />
+            {titleError && <p className="text-xs text-red-600 mt-1">{titleError}</p>}
+          </div>
         ) : (
           <h2 className="text-xl font-bold text-gray-800 pr-8 mb-4">{selectedCard.title}</h2>
         )}
@@ -234,14 +246,14 @@ export default function CardDetailModal() {
           {editing ? (
             <div className="flex gap-2">
               <button
-                onClick={() => setEditing(false)}
+                onClick={() => { setEditing(false); setTitleError(null); }}
                 className="text-sm px-4 py-1.5 rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50"
               >
                 キャンセル
               </button>
               <button
                 onClick={handleSave}
-                disabled={saving || !title.trim()}
+                disabled={saving}
                 className="text-sm px-4 py-1.5 rounded-md bg-brand-blue text-white hover:opacity-90 disabled:opacity-50"
               >
                 {saving ? '保存中...' : '保存'}

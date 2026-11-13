@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { BoardSummary } from '../../types';
+import { validateName } from '../../utils/validation';
 
 interface Props {
   board: BoardSummary;
@@ -12,20 +13,32 @@ export default function BoardCard({ board, onRename, onDelete }: Props) {
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(board.name);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const cancelEdit = () => {
+    setEditing(false);
+    setEditName(board.name);
+    setNameError(null);
+  };
+
   const handleRename = async () => {
-    if (!editName.trim() || editName.trim() === board.name) {
-      setEditing(false);
-      setEditName(board.name);
+    const error = validateName(editName, 'ボード名');
+    if (error) {
+      setNameError(error);
+      return;
+    }
+    if (editName.trim() === board.name) {
+      cancelEdit();
       return;
     }
     setSaving(true);
     await onRename(board.id, editName.trim());
     setSaving(false);
     setEditing(false);
+    setNameError(null);
   };
 
   const handleDelete = async () => {
@@ -40,20 +53,22 @@ export default function BoardCard({ board, onRename, onDelete }: Props) {
         <input
           autoFocus
           value={editName}
-          onChange={e => setEditName(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') { setEditing(false); setEditName(board.name); } }}
-          className="border border-gray-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-brand-blue"
+          onChange={e => { setEditName(e.target.value); setNameError(null); }}
+          onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') cancelEdit(); }}
+          aria-invalid={nameError !== null}
+          className={`border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-brand-blue ${nameError ? 'border-red-400' : 'border-gray-200'}`}
         />
+        {nameError && <p className="text-xs text-red-600 -mt-1">{nameError}</p>}
         <div className="flex gap-2">
           <button
-            onClick={() => { setEditing(false); setEditName(board.name); }}
+            onClick={cancelEdit}
             className="flex-1 text-sm px-3 py-1 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50"
           >
             キャンセル
           </button>
           <button
             onClick={handleRename}
-            disabled={saving || !editName.trim()}
+            disabled={saving}
             className="flex-1 text-sm px-3 py-1 rounded-md bg-brand-blue text-white hover:opacity-90 disabled:opacity-50"
           >
             {saving ? '保存中...' : '保存'}
@@ -100,7 +115,7 @@ export default function BoardCard({ board, onRename, onDelete }: Props) {
       </button>
       <div className="absolute top-2 right-2 hidden group-hover:flex gap-1">
         <button
-          onClick={e => { e.stopPropagation(); setEditName(board.name); setEditing(true); }}
+          onClick={e => { e.stopPropagation(); setEditName(board.name); setNameError(null); setEditing(true); }}
           title="名前を変更"
           className="bg-white/20 hover:bg-white/30 text-white rounded px-2 py-0.5 text-xs transition"
         >
