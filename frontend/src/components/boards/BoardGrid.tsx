@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { BoardSummary } from '../../types';
+import { validateName } from '../../utils/validation';
 import BoardCard from './BoardCard';
 
 interface Props {
@@ -13,14 +14,24 @@ export default function BoardGrid({ boards, onAdd, onRename, onDelete }: Props) 
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState('');
   const [saving, setSaving] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+
+  const closeCreate = () => {
+    setCreating(false);
+    setNewName('');
+    setNameError(null);
+  };
 
   const handleCreate = async () => {
-    if (!newName.trim()) return;
+    const error = validateName(newName, 'ボード名');
+    if (error) {
+      setNameError(error);
+      return;
+    }
     setSaving(true);
     await onAdd(newName.trim());
     setSaving(false);
-    setNewName('');
-    setCreating(false);
+    closeCreate();
   };
 
   return (
@@ -34,21 +45,23 @@ export default function BoardGrid({ boards, onAdd, onRename, onDelete }: Props) 
           <input
             autoFocus
             value={newName}
-            onChange={e => setNewName(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') setCreating(false); }}
+            onChange={e => { setNewName(e.target.value); setNameError(null); }}
+            onKeyDown={e => { if (e.key === 'Enter') handleCreate(); if (e.key === 'Escape') closeCreate(); }}
             placeholder="ボード名を入力"
-            className="border border-gray-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-brand-blue"
+            aria-invalid={nameError !== null}
+            className={`border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:border-brand-blue ${nameError ? 'border-red-400' : 'border-gray-200'}`}
           />
+          {nameError && <p className="text-xs text-red-600 -mt-1">{nameError}</p>}
           <div className="flex gap-2">
             <button
-              onClick={() => setCreating(false)}
+              onClick={closeCreate}
               className="flex-1 text-sm px-3 py-1 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50"
             >
               キャンセル
             </button>
             <button
               onClick={handleCreate}
-              disabled={saving || !newName.trim()}
+              disabled={saving}
               className="flex-1 text-sm px-3 py-1 rounded-md bg-brand-blue text-white hover:opacity-90 disabled:opacity-50"
             >
               {saving ? '作成中...' : '作成'}

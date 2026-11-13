@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SearchBar from '../ui/SearchBar';
+import { validateName } from '../../utils/validation';
 
 interface Props {
   showBack?: boolean;
@@ -14,24 +15,36 @@ export default function Header({ showBack, boardName, onRenameBoard, onDeleteBoa
   const navigate = useNavigate();
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
+  const [nameError, setNameError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const startEdit = () => {
     setNameInput(boardName ?? '');
+    setNameError(null);
     setEditingName(true);
   };
 
+  const cancelEdit = () => {
+    setEditingName(false);
+    setNameError(null);
+  };
+
   const handleRename = async () => {
-    if (!nameInput.trim() || !onRenameBoard) {
-      setEditingName(false);
+    if (!onRenameBoard) {
+      cancelEdit();
+      return;
+    }
+    const error = validateName(nameInput, 'ボード名');
+    if (error) {
+      setNameError(error);
       return;
     }
     setSaving(true);
     await onRenameBoard(nameInput.trim());
     setSaving(false);
-    setEditingName(false);
+    cancelEdit();
   };
 
   const handleDelete = async () => {
@@ -54,27 +67,31 @@ export default function Header({ showBack, boardName, onRenameBoard, onDeleteBoa
       )}
 
       {editingName ? (
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <input
-            autoFocus
-            value={nameInput}
-            onChange={e => setNameInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') setEditingName(false); }}
-            className="bg-white/10 border border-white/30 rounded px-2 py-0.5 text-white text-lg font-bold focus:outline-none focus:border-white/60 min-w-0 flex-1"
-          />
-          <button
-            onClick={() => setEditingName(false)}
-            className="text-white/60 hover:text-white text-sm shrink-0"
-          >
-            キャンセル
-          </button>
-          <button
-            onClick={handleRename}
-            disabled={saving || !nameInput.trim()}
-            className="bg-white/20 hover:bg-white/30 text-white text-sm px-3 py-0.5 rounded disabled:opacity-50 shrink-0"
-          >
-            {saving ? '保存中...' : '保存'}
-          </button>
+        <div className="flex flex-col flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <input
+              autoFocus
+              value={nameInput}
+              onChange={e => { setNameInput(e.target.value); setNameError(null); }}
+              onKeyDown={e => { if (e.key === 'Enter') handleRename(); if (e.key === 'Escape') cancelEdit(); }}
+              aria-invalid={nameError !== null}
+              className={`bg-white/10 border rounded px-2 py-0.5 text-white text-lg font-bold focus:outline-none focus:border-white/60 min-w-0 flex-1 ${nameError ? 'border-red-400' : 'border-white/30'}`}
+            />
+            <button
+              onClick={cancelEdit}
+              className="text-white/60 hover:text-white text-sm shrink-0"
+            >
+              キャンセル
+            </button>
+            <button
+              onClick={handleRename}
+              disabled={saving}
+              className="bg-white/20 hover:bg-white/30 text-white text-sm px-3 py-0.5 rounded disabled:opacity-50 shrink-0"
+            >
+              {saving ? '保存中...' : '保存'}
+            </button>
+          </div>
+          {nameError && <p className="text-xs text-red-300 mt-1">{nameError}</p>}
         </div>
       ) : confirmingDelete ? (
         <div className="flex items-center gap-2 flex-1 min-w-0">
